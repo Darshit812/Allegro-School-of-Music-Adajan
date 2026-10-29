@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Allegro School of Music — Login</title>
+<link rel="stylesheet" href="css/style.css" />
+</head>
+<body>
+
+<div class="login-wrap">
+  <div class="login-hero">
+    <div class="eyebrow">Allegro School of Music</div>
+    <h1>Where every lesson<br/>finds its rhythm.</h1>
+    <p>One platform for admissions, attendance, homework, fees and progress — built for admins, teachers and parents alike.</p>
+    <div class="staff-rule dark" style="max-width:220px; margin-top:36px;"></div>
+  </div>
+
+  <div class="login-panel">
+    <div class="login-box">
+      <h2 style="font-size:26px; margin-bottom:4px;">Welcome back</h2>
+      <p class="hint-text" style="margin-bottom:24px;">Sign in to continue to your dashboard</p>
+
+      <div class="role-tabs">
+        <div class="role-tab active" data-role="admin">Admin</div>
+        <div class="role-tab" data-role="teacher">Teacher</div>
+        <div class="role-tab" data-role="parent">Parent</div>
+      </div>
+
+      <form id="loginForm">
+        <div class="field">
+          <label id="idLabel">Email</label>
+          <input type="text" id="identifier" placeholder="you@allegromusic.com" autocomplete="username" required />
+        </div>
+        <div class="field">
+          <label>Password</label>
+          <input type="password" id="password" placeholder="••••••••" autocomplete="current-password" required />
+        </div>
+        <button type="submit" class="btn btn-primary" style="width:100%; justify-content:center;" id="loginBtn">
+          Sign In
+        </button>
+        <div class="error-text" id="errorText"></div>
+        <p class="hint-text" id="roleHint" style="margin-top:16px;">Admins sign in with their registered email address.</p>
+      </form>
+    </div>
+  </div>
+</div>
+
+<script type="module">
+  import { loginAs } from "./js/auth.js";
+
+  let currentRole = "admin";
+  const idLabel = document.getElementById("idLabel");
+  const identifier = document.getElementById("identifier");
+  const roleHint = document.getElementById("roleHint");
+  const errorText = document.getElementById("errorText");
+  const loginBtn = document.getElementById("loginBtn");
+
+  const hints = {
+    admin: { label: "Email", placeholder: "you@allegromusic.com", hint: "Admins sign in with their registered email address." },
+    teacher: { label: "Login ID", placeholder: "e.g. teacher_ravi", hint: "Use the Login ID and password given to you by the admin." },
+    parent: { label: "Login ID", placeholder: "e.g. parent_ravi", hint: "Use the Login ID and password given to you by the admin." }
+  };
+
+  document.querySelectorAll(".role-tab").forEach(tab => {
+    tab.addEventListener("click", () => {
+      document.querySelectorAll(".role-tab").forEach(t => t.classList.remove("active"));
+      tab.classList.add("active");
+      currentRole = tab.dataset.role;
+      const h = hints[currentRole];
+      idLabel.textContent = h.label;
+      identifier.placeholder = h.placeholder;
+      roleHint.textContent = h.hint;
+      errorText.style.display = "none";
+    });
+  });
+
+  document.getElementById("loginForm").addEventListener("submit", async (e) => {
+    e.preventDefault();
+    errorText.style.display = "none";
+    loginBtn.disabled = true;
+    loginBtn.textContent = "Signing in…";
+
+    try {
+      const profile = await loginAs(currentRole, identifier.value, document.getElementById("password").value);
+      if (profile.role === "admin") window.location.href = "admin.html";
+      else if (profile.role === "teacher") window.location.href = "teacher.html";
+      else window.location.href = "parent.html";
+    } catch (err) {
+      errorText.textContent = err.message.includes("auth/") || err.message.includes("credential")
+        ? "Incorrect ID or password. Please try again."
+        : err.message;
+      errorText.style.display = "block";
+      loginBtn.disabled = false;
+      loginBtn.textContent = "Sign In";
+    }
+  });
+</script>
+</body>
+</html>

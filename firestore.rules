@@ -1,0 +1,76 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // --- HELPER FUNCTIONS ---
+    function isSignedIn() { return request.auth != null; }
+    
+    function myProfile() { 
+      return get(/databases/$(database)/documents/users/$(request.auth.uid)).data; 
+    }
+    
+    function isAdmin() { return isSignedIn() && myProfile().role == 'admin'; }
+    function isTeacher() { return isSignedIn() && myProfile().role == 'teacher'; }
+    function isParent() { return isSignedIn() && myProfile().role == 'parent'; }
+
+    // --- USERS ---
+    match /users/{uid} {
+      allow read: if isSignedIn() && (request.auth.uid == uid || isAdmin());
+      // Note: Normal users cannot edit their own profile (like changing phone number). 
+      // If they need to, change this to: if isAdmin() || request.auth.uid == uid;
+      allow write: if isAdmin();
+    }
+
+    // --- MASTER DATA ---
+    match /courses/{id} { allow read: if isSignedIn(); allow write: if isAdmin(); }
+    match /teachers/{id} { allow read: if isSignedIn(); allow write: if isAdmin(); }
+    match /batches/{id} { allow read: if isSignedIn(); allow write: if isAdmin(); }
+    match /counters/{id} { allow read, write: if isAdmin(); }
+
+    // --- STUDENTS ---
+    match /students/{id} {
+      // Parents can only read their OWN linked student
+      allow read: if isAdmin() || isTeacher() || (isParent() && myProfile().studentId == id);
+      allow write: if isAdmin();
+    }
+
+    // --- ACADEMICS (Attendance / Homework) ---
+    match /attendance/{id} { 
+      allow read: if isSignedIn(); 
+      allow write: if isAdmin() || isTeacher(); 
+    }
+    match /homework/{id} { 
+      allow read: if isSignedIn(); 
+      allow write: if isAdmin() || isTeacher(); 
+    }
+
+    // --- FINANCE (Fee Plans / Payments) ---
+    match /feePlans/{id} { 
+      // SECURE: Parents can only read fee plans if the document has their linked student's ID
+      // (Assuming your feePlans document contains a 'studentId' field)
+      allow read: if isAdmin() || (isParent() && resource.data.studentId == myProfile().studentId); 
+      allow write: if isAdmin(); 
+    }
+    
+    match /payments/{id} { 
+      // SECURE: Parents can only read their own payment receipts
+      // (Assuming your payments document contains a 'studentId' field)
+      allow read: if isAdmin() || (isParent() && resource.data.studentId == myProfile().studentId); 
+      allow write: if isAdmin(); 
+    }
+
+    // --- ADMIN ONLY LOGS & ACCOUNTS ---
+    match /salaryPayouts/{id} { allow read, write: if isAdmin(); }
+    match /incomeEntries/{id} { allow read, write: if isAdmin(); }
+    match /expenseEntries/{id} { allow read, write: if isAdmin(); }
+    match /accounting/{id} { allow read, write: if isAdmin(); }
+
+    // --- MISC ---
+    match /events/{id} { allow read: if isSignedIn(); allow write: if isAdmin(); }
+    match /notifications/{id} { allow read: if isSignedIn(); allow write: if isAdmin(); }
+    match /activityLog/{id} { 
+      allow read: if isAdmin(); 
+      allow write: if isAdmin() || isTeacher(); 
+    }
+  }
+}

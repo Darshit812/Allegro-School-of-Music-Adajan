@@ -1,0 +1,549 @@
+/* ============================================================
+   Allegro School of Music — Design System
+   Palette: deep indigo-plum stage curtain + brass/gold accents
+   Type: Cormorant Garamond (display) + DM Sans (body/UI)
+   Signature motif: 5-line staff rule, used as a section divider
+   ============================================================ */
+
+@import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,500;0,600;0,700;1,500&family=DM+Sans:wght@400;500;600;700&display=swap');
+
+:root {
+  --color-bg: #FAF6EF;
+  --color-surface: #FFFFFF;
+  --color-surface-alt: #F1EBDD;
+  --color-primary: #241531;
+  --color-primary-light: #3D2856;
+  --color-accent: #C89B3C;
+  --color-accent-soft: #E9D3A0;
+  --color-teal: #1F6F6B;
+  --color-text: #241831;
+  --color-text-muted: #6E6178;
+  --color-border: #E3DACB;
+  --color-danger: #B3452F;
+  --color-success: #1F6F6B;
+
+  --radius-sm: 6px;
+  --radius-md: 10px;
+  --radius-lg: 16px;
+  --shadow-card: 0 2px 10px rgba(36, 21, 49, 0.06);
+  --shadow-pop: 0 12px 32px rgba(36, 21, 49, 0.16);
+
+  --font-display: 'Cormorant Garamond', serif;
+  --font-body: 'DM Sans', sans-serif;
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+  font-family: var(--font-body);
+  background: var(--color-bg);
+  color: var(--color-text);
+  min-height: 100vh;
+  -webkit-font-smoothing: antialiased;
+}
+
+h1, h2, h3, .display {
+  font-family: var(--font-display);
+  font-weight: 600;
+  color: var(--color-primary);
+  letter-spacing: 0.2px;
+}
+
+a { color: inherit; text-decoration: none; }
+
+/* ---------- Signature: 5-line staff divider ---------- */
+.staff-rule {
+  width: 100%;
+  height: 18px;
+  background-image: repeating-linear-gradient(
+    to bottom,
+    var(--color-accent-soft) 0px,
+    var(--color-accent-soft) 1px,
+    transparent 1px,
+    transparent 4px
+  );
+  opacity: 0.7;
+  margin: 8px 0 20px;
+}
+.staff-rule.dark {
+  background-image: repeating-linear-gradient(
+    to bottom,
+    rgba(255,255,255,0.35) 0px,
+    rgba(255,255,255,0.35) 1px,
+    transparent 1px,
+    transparent 4px
+  );
+}
+
+/* ---------- Buttons ---------- */
+.btn {
+  font-family: var(--font-body);
+  font-weight: 600;
+  font-size: 14.5px;
+  border: none;
+  border-radius: var(--radius-sm);
+  padding: 11px 20px;
+  cursor: pointer;
+  transition: transform 0.12s ease, box-shadow 0.12s ease, opacity 0.12s ease;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+.btn:active { transform: scale(0.97); }
+.btn-primary { background: var(--color-primary); color: #fff; }
+.btn-primary:hover { background: var(--color-primary-light); }
+.btn-accent { background: var(--color-accent); color: var(--color-primary); }
+.btn-accent:hover { opacity: 0.9; }
+.btn-ghost { background: transparent; color: var(--color-primary); border: 1.5px solid var(--color-border); }
+.btn-ghost:hover { background: var(--color-surface-alt); }
+.btn-danger { background: transparent; color: var(--color-danger); border: 1.5px solid rgba(179,69,47,0.35); }
+.btn-danger:hover { background: rgba(179,69,47,0.08); }
+.btn-sm { padding: 7px 12px; font-size: 13px; }
+.btn:disabled { opacity: 0.5; cursor: not-allowed; }
+
+/* ---------- Form elements ---------- */
+label {
+  display: block;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--color-text-muted);
+  margin-bottom: 6px;
+}
+input, select, textarea {
+  width: 100%;
+  font-family: var(--font-body);
+  font-size: 14.5px;
+  padding: 10px 12px;
+  border: 1.5px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  background: var(--color-surface);
+  color: var(--color-text);
+  outline: none;
+  transition: border-color 0.12s ease;
+}
+input:focus, select:focus, textarea:focus { border-color: var(--color-accent); }
+.field { margin-bottom: 16px; }
+.field-row { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+
+/* ---------- Cards / surfaces ---------- */
+.card {
+  background: var(--color-surface);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-card);
+  border: 1px solid var(--color-border);
+  padding: 24px;
+}
+
+/* ---------- Login page ---------- */
+.login-wrap {
+  min-height: 100vh;
+  display: grid;
+  grid-template-columns: 1.1fr 1fr;
+}
+@media (max-width: 860px) { .login-wrap { grid-template-columns: 1fr; } }
+
+.login-hero {
+  background: radial-gradient(120% 120% at 20% 10%, var(--color-primary-light), var(--color-primary) 60%);
+  color: #fff;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  padding: 60px 64px;
+  position: relative;
+  overflow: hidden;
+}
+.login-hero::after {
+  content: "";
+  position: absolute;
+  right: -80px; bottom: -80px;
+  width: 320px; height: 320px;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(200,155,60,0.35), transparent 70%);
+}
+.login-hero .eyebrow {
+  color: var(--color-accent);
+  font-weight: 700;
+  font-size: 13px;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  margin-bottom: 18px;
+}
+.login-hero h1 { font-size: 46px; line-height: 1.15; max-width: 480px; }
+.login-hero p { color: rgba(255,255,255,0.75); margin-top: 18px; max-width: 420px; font-size: 15.5px; }
+
+.login-panel {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 40px;
+}
+.login-box { width: 100%; max-width: 380px; }
+.role-tabs {
+  display: flex;
+  background: var(--color-surface-alt);
+  border-radius: var(--radius-md);
+  padding: 4px;
+  margin-bottom: 28px;
+}
+.role-tab {
+  flex: 1;
+  text-align: center;
+  padding: 10px 0;
+  border-radius: 8px;
+  font-weight: 600;
+  font-size: 14px;
+  color: var(--color-text-muted);
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+.role-tab.active { background: var(--color-primary); color: #fff; }
+
+.error-text { color: var(--color-danger); font-size: 13.5px; margin-top: 10px; display: none; }
+.hint-text { color: var(--color-text-muted); font-size: 12.5px; margin-top: 8px; }
+
+/* ---------- Dashboard shell ---------- */
+.shell { display: grid; grid-template-columns: 250px 1fr; min-height: 100vh; }
+@media (max-width: 780px) { .shell { grid-template-columns: 1fr; } .sidebar { display: none; } }
+
+.sidebar {
+  background: var(--color-primary);
+  color: #fff;
+  padding: 26px 18px;
+  display: flex;
+  flex-direction: column;
+  display: flex !important;
+  flex-direction: column !important;
+  height: 100vh !important;
+  overflow-y: auto !important;
+}
+.sidebar .brand { font-family: var(--font-display); font-size: 24px; font-weight: 700; padding: 0 8px 6px; }
+.sidebar .brand small { display: block; font-family: var(--font-body); font-size: 11px; color: var(--color-accent-soft); font-weight: 600; letter-spacing: 1.5px; text-transform: uppercase; margin-top: 2px; }
+
+.nav-group { margin-top: 22px; }
+.nav-group-label { font-size: 11px; text-transform: uppercase; letter-spacing: 1.2px; color: rgba(255,255,255,0.4); padding: 0 10px; margin-bottom: 8px; font-weight: 700; }
+.nav-item {
+  display: flex; align-items: center; gap: 10px;
+  padding: 10px 12px; border-radius: var(--radius-sm);
+  font-size: 14.5px; font-weight: 500; color: rgba(255,255,255,0.78);
+  cursor: pointer; margin-bottom: 2px;
+  transition: background 0.12s ease;
+}
+.nav-item:hover { background: rgba(255,255,255,0.06); color: #fff; }
+.nav-item.active { background: var(--color-accent); color: var(--color-primary); font-weight: 700; }
+.nav-item .dot { width: 6px; height: 6px; border-radius: 50%; background: currentColor; opacity: 0.6; }
+
+.sidebar-footer { margin-top: auto; padding-top: 18px; border-top: 1px solid rgba(255,255,255,0.12); }
+
+.main { padding: 32px 40px; overflow-y: auto; }
+.main-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 26px; flex-wrap: wrap; gap: 14px; }
+.main-header h2 { font-size: 30px; }
+.main-header .sub { color: var(--color-text-muted); font-size: 14px; margin-top: 4px; }
+
+.stat-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; margin-bottom: 28px; }
+@media (max-width: 900px) { .stat-grid { grid-template-columns: repeat(2, 1fr); } }
+.stat-card { background: var(--color-surface); border: 1px solid var(--color-border); border-radius: var(--radius-lg); padding: 18px 20px; }
+.stat-card .label { font-size: 12.5px; color: var(--color-text-muted); font-weight: 600; text-transform: uppercase; letter-spacing: 0.6px; }
+.stat-card .value { font-family: var(--font-display); font-size: 32px; color: var(--color-primary); margin-top: 6px; }
+/* Dashboard, Salary aur Accounting ke amounts ka font readable karne ke liye */
+.stat-card .value {
+    font-family: 'Segoe UI', system-ui, -apple-system, sans-serif !important;
+    letter-spacing: 0.5px;
+}
+
+/* ---------- Tables ---------- */
+.table-wrap { overflow-x: auto; }
+table { width: 100%; border-collapse: collapse; }
+th { text-align: left; font-size: 12px; text-transform: uppercase; letter-spacing: 0.6px; color: var(--color-text-muted); padding: 10px 14px; border-bottom: 2px solid var(--color-border); }
+td { padding: 12px 14px; border-bottom: 1px solid var(--color-border); font-size: 14.5px; }
+tr:last-child td { border-bottom: none; }
+.badge { display: inline-block; padding: 3px 10px; border-radius: 20px; font-size: 12px; font-weight: 700; }
+.badge-active { background: rgba(31,111,107,0.12); color: var(--color-teal); }
+.badge-inactive { background: rgba(179,69,47,0.1); color: var(--color-danger); }
+
+/* ---------- Modal ---------- */
+.modal-overlay {
+  position: fixed; inset: 0; background: rgba(36,21,49,0.45);
+  display: none; align-items: center; justify-content: center; z-index: 100; padding: 20px;
+}
+.modal-overlay.open { display: flex; }
+.modal {
+  background: var(--color-surface); border-radius: var(--radius-lg);
+  max-width: 560px; width: 100%; max-height: 88vh; overflow-y: auto;
+  box-shadow: var(--shadow-pop);
+}
+.modal-head { padding: 22px 26px 0; display: flex; justify-content: space-between; align-items: center; }
+.modal-body { padding: 18px 26px 26px; }
+.modal-close { cursor: pointer; font-size: 22px; color: var(--color-text-muted); line-height: 1; }
+
+.toolbar { display: flex; justify-content: space-between; align-items: center; margin-bottom: 18px; gap: 12px; flex-wrap: wrap; }
+.search-input { max-width: 280px; }
+
+.empty-state { text-align: center; padding: 60px 20px; color: var(--color-text-muted); }
+.empty-state .icon { font-size: 36px; margin-bottom: 10px; }
+
+.pill-toggle { display: flex; gap: 8px; }
+.pill { padding: 6px 14px; border-radius: 20px; font-size: 13px; font-weight: 600; border: 1.5px solid var(--color-border); cursor: pointer; color: var(--color-text-muted); }
+.pill.active { background: var(--color-primary); border-color: var(--color-primary); color: #fff; }
+
+.toast {
+  position: fixed; bottom: 24px; right: 24px; background: var(--color-primary); color: #fff;
+  padding: 14px 20px; border-radius: var(--radius-md); box-shadow: var(--shadow-pop);
+  font-size: 14px; font-weight: 500; z-index: 200; opacity: 0; transform: translateY(10px);
+  transition: all 0.25s ease; pointer-events: none;
+}
+.toast.show { opacity: 1; transform: translateY(0); }
+.toast.error { background: var(--color-danger); }
+
+/* ---------------- Calendar ---------------- */
+.cal-legend { display: flex; flex-wrap: wrap; gap: 14px; margin-bottom: 18px; }
+.cal-legend span { display: flex; align-items: center; gap: 6px; font-size: 13px; color: var(--color-text-muted); }
+.cal-grid {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 6px;
+}
+.cal-daylabel {
+  font-size: 12px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: var(--color-text-muted);
+  text-align: center;
+}
+.cal-cell {
+  min-height: 74px;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  padding: 6px;
+  cursor: pointer;
+  background: var(--color-surface);
+  transition: background 0.12s ease;
+}
+.cal-cell:hover { background: var(--color-surface-alt); }
+.cal-cell.dim { opacity: 0.4; }
+.cal-cell.today { border: 2px solid var(--color-accent); }
+.cal-num { font-size: 13px; font-weight: 700; color: var(--color-primary); }
+.cal-dots { display: flex; flex-wrap: wrap; gap: 3px; margin-top: 6px; }
+.cal-dot { width: 8px; height: 8px; border-radius: 50%; display: inline-block; flex-shrink: 0; }
+@media (max-width: 680px) {
+  .cal-cell { min-height: 50px; }
+  .cal-daylabel { font-size: 10px; }
+}
+
+/* ---------------- Calendar ---------------- */
+.cal-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 6px; }
+.cal-daylabel { text-align: center; font-size: 12px; font-weight: 700; color: var(--color-text-muted); text-transform: uppercase; letter-spacing: 0.5px; padding: 4px 0; }
+.cal-cell {
+  min-height: 76px; border-radius: var(--radius-sm); border: 1px solid var(--color-border);
+  background: var(--color-surface); padding: 6px 8px; cursor: pointer; transition: box-shadow 0.12s ease;
+}
+.cal-cell:hover { box-shadow: var(--shadow-card); }
+.cal-cell.dim { opacity: 0.35; }
+.cal-cell.today { border-color: var(--color-accent); border-width: 2px; }
+.cal-cell .cal-num { font-size: 13px; font-weight: 700; color: var(--color-primary); }
+.cal-dots { display: flex; flex-wrap: wrap; gap: 3px; margin-top: 6px; }
+.cal-dot { width: 7px; height: 7px; border-radius: 50%; }
+.cal-legend { display: flex; flex-wrap: wrap; gap: 14px; margin-bottom: 16px; font-size: 13px; color: var(--color-text-muted); }
+.cal-legend span { display: inline-flex; align-items: center; gap: 6px; }
+
+/* =========================================
+   MOBILE RESPONSIVE MENU (HAMBURGER)
+   ========================================= */
+
+/* Desktop par hamburger button aur overlay hide rahega */
+.mobile-menu-btn {
+    display: none;
+    background: none;
+    border: none;
+    font-size: 28px;
+    cursor: pointer;
+    color: var(--color-primary);
+    padding: 0px 15px;
+}
+
+.mobile-overlay {
+    display: none;
+    position: fixed;
+    top: 0; left: 0; width: 100%; height: 100%;
+    background: rgba(0,0,0,0.5);
+    z-index: 999;
+}
+
+/* Mobile Screens (768px se chhote) ke liye rule */
+@media (max-width: 768px) {
+    /* Hamburger button show karo */
+    .mobile-menu-btn {
+        display: block !important;
+    }
+    
+    /* Sidebar ko screen ke left side se bahar chhupao */
+    .sidebar { /* Agar aapki menu class ka naam kuch aur hai toh yahan change karein */
+        position: fixed;
+        left: -300px; /* Screen ke bahar */
+        top: 0;
+        height: 100vh;
+        width: 260px;
+        z-index: 1000;
+        transition: left 0.3s ease-in-out;
+        box-shadow: 2px 0 10px rgba(0,0,0,0.2);
+    }
+    
+    /* Jab 'open' class lagegi tab sidebar andar aayega */
+    .sidebar.open {
+        left: 0;
+    }
+    
+    .mobile-overlay.open {
+        display: block;
+    }
+
+    /* Main content ko mobile par full width kar do */
+    .main-content {
+        margin-left: 0 !important;
+        width: 100% !important;
+    }
+}
+
+/* =========================================
+   CALENDAR DOT SIZE (RESPONSIVE)
+   ========================================= */
+@media (min-width: 769px) {
+    .cal-dot {
+        width: 13px !important;
+        height: 13px !important;
+    }
+}
+
+/* =========================================================
+   MOBILE RESPONSIVENESS & UI FIXES
+   ========================================================= */
+.table-wrap {
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  border-radius: 6px;
+}
+table {
+  min-width: 600px; /* Chhoti screen par table pichkega nahi, scroll hoga */
+}
+
+@media (max-width: 768px) {
+  /* Forms ko ek line me lane ki jagah upar-niche (stack) karega */
+  .field-row { 
+    flex-direction: column; 
+    gap: 12px; 
+  }
+  
+  /* Top stats 2 columns me dikhenge instead of 4 */
+  .stat-grid { 
+    grid-template-columns: 1fr 1fr !important; 
+  }
+  
+  /* Header me button niche aayega aur full width lega */
+  .main-header { 
+    flex-direction: column; 
+    align-items: flex-start; 
+    gap: 12px; 
+  }
+  .main-header button, .main-header select { 
+    width: 100%; 
+    justify-content: center;
+  }
+  
+  /* Modals/Popups phone screen par fit honge */
+  .modal-content { 
+    width: 95%; 
+    margin: 10px auto; 
+    padding: 16px; 
+    max-height: 90vh;
+    overflow-y: auto;
+  }
+  
+  /* Sidebar Mobile pe slide-in hoga */
+  .sidebar { 
+    position: fixed; 
+    left: -100%; 
+    top: 0; 
+    bottom: 0; 
+    z-index: 1000; 
+    transition: 0.3s ease-in-out; 
+    box-shadow: 2px 0 10px rgba(0,0,0,0.2); 
+  }
+  .sidebar.open { 
+    left: 0; 
+  }
+  
+  /* Hide unwanted buttons on mobile if needed */
+  #mobileMenuBtn { display: block; }
+}
+
+/* =========================================================
+   MOBILE APP UI OVERHAUL (Fixing Alignments & Wasted Space)
+   ========================================================= */
+@media (max-width: 768px) {
+  /* 1. Side Space Fix: Faltu jagah hatakar edge-to-edge look */
+  .shell { padding: 0 !important; }
+  .main { padding: 10px 8px !important; }
+  .card { padding: 12px !important; margin-bottom: 12px !important; border-radius: 8px !important; }
+
+  /* 2. Welcome Text Fix: Bada text chhote screen par fit karega */
+  .main-header h2 { font-size: 22px !important; line-height: 1.2 !important; margin-bottom: 4px !important; }
+  .main-header .sub { font-size: 12px !important; line-height: 1.4 !important; }
+
+  /* 3. Tabs (Pills) Fix: Patli scrollable line me set karega */
+  .pill-toggle { 
+    flex-wrap: nowrap !important; 
+    overflow-x: auto !important; 
+    padding-bottom: 6px !important;
+    gap: 8px !important;
+  }
+  .pill { 
+    padding: 6px 14px !important; 
+    font-size: 13px !important; 
+    white-space: nowrap !important; /* Text ko 2 line me tootne se rokega */
+  }
+
+  /* 4. Table Compact Fix: Padding kam karke data properly dikhayega */
+  th, td { padding: 8px 4px !important; font-size: 12.5px !important; }
+  .status-pill { padding: 4px 6px !important; font-size: 11px !important; flex: 1; text-align: center; }
+
+  /* 5. Bottom Buttons Fix (Add Guest, HW, Save Attendance) */
+  /* Outer div ko column me karke buttons ko proper stack karega */
+  .card > div[style*="justify-content:space-between"] {
+    flex-direction: column !important;
+    gap: 12px !important;
+    align-items: stretch !important;
+  }
+  /* Guest aur HW button ko side-by-side (50-50%) karega */
+  .card > div[style*="justify-content:space-between"] > div {
+    display: grid !important;
+    grid-template-columns: 1fr 1fr !important; 
+    width: 100% !important;
+    gap: 8px !important;
+  }
+  /* Buttons ko phone format me full click-area dega */
+  .btn { 
+    padding: 10px !important; 
+    font-size: 14px !important; 
+    text-align: center !important; 
+    justify-content: center !important; 
+    width: 100% !important; 
+  }
+  /* Table ke andar wale chhote buttons (HW/Edit) ko wapas chhota karega */
+  td .btn, td .btn-sm, td .quick-hw-btn { 
+    width: auto !important; 
+    padding: 4px 8px !important; 
+  }
+}
+
+/* =========================================================
+   PARENT PORTAL HAMBURGER BUTTON FIX
+   ========================================================= */
+#mobileMenuBtn {
+  position: relative !important;
+  z-index: 9999 !important; /* Button ko sabse upar (front) layega taaki click ho sake */
+  background: transparent !important;
+  border: none !important;
+  font-size: 26px !important;
+  color: var(--color-primary) !important;
+  cursor: pointer;
+}

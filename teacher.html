@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Teacher Dashboard — Allegro School of Music</title>
+<link rel="stylesheet" href="css/style.css" />
+</head>
+<body>
+<div class="shell">
+  <aside class="sidebar">
+    <div class="brand">Allegro<small>Teacher Portal</small></div>
+    <div class="nav-group">
+      <div class="nav-group-label">My Work</div>
+      <div class="nav-item active"><span class="dot"></span> Attendance & Homework</div>
+    </div>
+    <div style="margin-top: auto; padding: 20px;">
+      <button id="logoutBtn" class="btn btn-danger" style="width: 100%;">🚪 Logout</button>
+    </div>
+  </aside>
+  <main class="main">
+    <!-- NAYA: Hamburger Menu Button -->
+    <button id="mobileMenuBtn" class="mobile-menu-btn" style="margin: 15px 15px 0 15px;">☰</button>
+    
+    <div class="main-header"><div><h2 id="welcomeMsg">Welcome</h2><div class="sub">Attendance, homework, and notifications — all here.</div></div></div>
+    <div id="viewRoot"></div>
+  </main>
+</div>
+
+<div class="modal-overlay" id="modalOverlay">
+  <div class="modal">
+    <div class="modal-head">
+      <h3 id="modalTitle">Title</h3>
+      <span class="modal-close" id="modalClose">&times;</span>
+    </div>
+    <div class="modal-body" id="modalBody"></div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<!-- NAYA: Mobile Overlay -->
+<div id="mobileOverlay" class="mobile-overlay"></div>
+
+<script type="module" src="js/teacher.js"></script>
+</body>
+</html>

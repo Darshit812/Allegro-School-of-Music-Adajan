@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Admin Dashboard — Allegro School of Music</title>
+<link rel="stylesheet" href="css/style.css" />
+</head>
+<body>
+
+<div class="shell">
+  <aside class="sidebar">
+    <div class="brand">Allegro<small>Admin Console</small></div>
+
+    <div class="nav-group">
+      <div class="nav-group-label">Overview</div>
+      <div class="nav-item active" data-view="dashboard"><span class="dot"></span> Dashboard</div>
+      <div class="nav-item" data-view="calendar"><span class="dot"></span> Calendar</div>
+    </div>
+
+    <div class="nav-group">
+      <div class="nav-group-label">Academy</div>
+      <div class="nav-item" data-view="courses"><span class="dot"></span> Courses</div>
+      <div class="nav-item" data-view="teachers"><span class="dot"></span> Teachers</div>
+      <div class="nav-item" data-view="batches"><span class="dot"></span> Batches</div>
+      <div class="nav-item" data-view="students"><span class="dot"></span> Students</div>
+    </div>
+
+    <div class="nav-group">
+      <div class="nav-group-label">Operations</div>
+      <div class="nav-item" data-view="attendance"><span class="dot"></span> Attendance</div>
+      <div class="nav-item" data-view="homework"><span class="dot"></span> Homework</div>
+      <div class="nav-item" data-view="fees"><span class="dot"></span> Fees</div>
+      <div class="nav-item" data-view="salary"><span class="dot"></span> Salary</div>
+      <div class="nav-item" data-view="accounting"><span class="dot"></span> Accounting</div>
+      <div class="nav-item" data-view="reports"><span class="dot"></span> Reports</div>
+      <div class="nav-item" data-view="notifications"><span class="dot"></span> Notifications</div>
+      <div class="nav-item" data-view="activity"><span class="dot"></span> Activity Log</div>
+    </div>
+
+    <div style="margin-top: auto; padding: 20px;">
+      <button id="logoutBtn" class="btn btn-danger" style="width: 100%;">🚪 Logout</button>
+    </div>
+  </aside>
+
+  <main class="main">
+    <!-- NAYA: Hamburger Menu Button -->
+    <button id="mobileMenuBtn" class="mobile-menu-btn" style="margin: 15px;">☰</button>
+    
+    <div id="viewRoot"></div>
+  </main>
+</div>
+
+<!-- Generic modal shell, reused by every form -->
+
+<!-- Generic modal shell, reused by every form -->
+<div class="modal-overlay" id="modalOverlay">
+  <div class="modal">
+    <div class="modal-head">
+      <h3 id="modalTitle">Title</h3>
+      <span class="modal-close" id="modalClose">&times;</span>
+    </div>
+    <div class="modal-body" id="modalBody"></div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<!-- NAYA: Mobile Overlay -->
+<div id="mobileOverlay" class="mobile-overlay"></div>
+
+<script type="module" src="js/admin.js"></script>
+</body>
+</html>
