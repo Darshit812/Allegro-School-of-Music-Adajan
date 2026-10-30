@@ -205,9 +205,11 @@ let calState = { year: new Date().getFullYear(), month: new Date().getMonth() };
 async function renderCalendarView() {
   const { year, month } = calState;
   
-  const [plan, batches] = await Promise.all([
+  // NAYA: Attendance History bhi mangwa rahe hain taaki Present/Absent dikha sakein
+  const [plan, batches, attHistory] = await Promise.all([
     FeePlans.getForStudent(studentCache.id),
-    Batches.list()
+    Batches.list(),
+    Attendance.listForStudent(studentCache.id, studentCache.batchId) 
   ]);
   const myBatch = batches.find(b => b.id === studentCache.batchId);
 
@@ -220,7 +222,28 @@ async function renderCalendarView() {
 
   if (studentDays.length) {
     gridDays.forEach(d => {
-      if (studentDays.includes(batchDayCode(d))) push(toKey(d), "classday", `${myBatch?.name || 'Batch'} · ${myBatch?.timing || ""}`);
+      const dKey = toKey(d);
+      if (studentDays.includes(batchDayCode(d))) {
+        const attRecord = attHistory.find(a => a.date === dKey);
+        
+        let typeStr = "classday";
+        let labelStr = `Class Scheduled · ${myBatch?.timing || ""}`;
+        
+        // Check Status: Present / Absent / Late
+        if(attRecord) {
+            if(attRecord.status === 'present') {
+                typeStr = "presentClass"; 
+                labelStr = `Class Attended (Present) · ${myBatch?.timing || ""}`;
+            } else if(attRecord.status === 'absent') {
+                typeStr = "absentClass";  
+                labelStr = `Class Missed (Absent) · ${myBatch?.timing || ""}`;
+            } else if(attRecord.status === 'late') {
+                typeStr = "lateClass";    
+                labelStr = `Class Attended (Late) · ${myBatch?.timing || ""}`;
+            }
+        }
+        push(dKey, typeStr, labelStr);
+      }
     });
   }
 
@@ -249,9 +272,15 @@ async function renderCalendarView() {
 
   const todayKey = toKey(new Date());
 
+  // NAYA: Legends update for big dots
   viewRoot.innerHTML = `
-    <div class="cal-legend">
-      ${Object.entries(CAL_LABELS).map(([k, l]) => `<span><span class="cal-dot" style="background:${CAL_COLORS[k]};"></span>${l}</span>`).join("")}
+    <div class="cal-legend" style="display:flex; flex-wrap:wrap; gap:10px; margin-bottom:12px;">
+      <span><span class="cal-dot" style="background:#4CAF50; width:12px; height:12px;"></span> Present</span>
+      <span><span class="cal-dot" style="background:#F44336; width:12px; height:12px;"></span> Absent</span>
+      <span><span class="cal-dot" style="background:#FFA726; width:12px; height:12px;"></span> Late</span>
+      <span><span class="cal-dot" style="background:#999; width:12px; height:12px;"></span> Scheduled</span>
+      <span><span class="cal-dot" style="background:#000080;"></span> Renewal</span>
+      <span><span class="cal-dot" style="background:#F44336;"></span> Fees</span>
     </div>
     <div class="toolbar">
       <button class="btn btn-ghost btn-sm" id="prevMonthBtn">← Prev</button>
@@ -275,19 +304,48 @@ async function renderCalendarView() {
     const key = toKey(d);
     const inMonth = d.getMonth() === month;
     const items = agenda[key] || [];
-    const dots = items.slice(0, 6).map(it => `<span class="cal-dot" style="background:${CAL_COLORS[it.type] || "#999"};"></span>`).join("");
-    return `<div class="cal-cell ${inMonth ? "" : "dim"} ${key === todayKey ? "today" : ""}" data-key="${key}">
-      <div class="cal-num">${d.getDate()}</div><div class="cal-dots">${dots}</div></div>`;
+    
+    let hasClass = false;
+    let classColor = "#999"; // default (scheduled/not marked)
+    let otherDots = "";
+    
+    items.slice(0, 6).forEach(it => {
+        if(it.type === 'presentClass') { classColor = "#4CAF50"; hasClass = true; } // Green
+        else if(it.type === 'absentClass') { classColor = "#F44336"; hasClass = true; } // Red
+        else if(it.type === 'lateClass') { classColor = "#FFA726"; hasClass = true; } // Orange
+        else if(it.type === 'classday') { classColor = "#999"; hasClass = true; } // Grey
+        else if(it.type === 'courseEnd') { otherDots += `<span class="cal-dot" style="background:#000080;"></span>`; }
+        else if(it.type === 'fee') { otherDots += `<span class="cal-dot" style="background:#F44336;"></span>`; }
+        else if(it.type === 'birthday') { otherDots += `<span class="cal-dot" style="background:#FFA726;"></span>`; }
+    });
+    
+    // NAYA: Class text aur Bada Dot
+    let classLabel = hasClass ? `<div style="font-size:9px; font-weight:bold; color:#777; text-transform:uppercase; margin-bottom:2px;">Class</div>` : "";
+    let classDot = hasClass ? `<span class="cal-dot" style="background:${classColor}; width:14px; height:14px; display:block; margin:4px auto;"></span>` : "";
+
+    return `<div class="cal-cell ${inMonth ? "" : "dim"} ${key === todayKey ? "today" : ""}" data-key="${key}" style="display:flex; flex-direction:column; align-items:center; justify-content:center; text-align:center;">
+      ${classLabel}
+      <div class="cal-num">${d.getDate()}</div>
+      ${classDot}
+      <div class="cal-dots" style="display:flex; gap:3px; justify-content:center; margin-top:2px;">${otherDots}</div>
+    </div>`;
   }).join("");
 
   cellsWrap.querySelectorAll(".cal-cell").forEach(cell => {
     cell.addEventListener("click", () => {
       const items = agenda[cell.dataset.key] || [];
-      openModal(new Date(cell.dataset.key).toDateString(), items.length ? items.map(it => `
-        <div style="display:flex; align-items:center; gap:10px; padding:8px 0; border-bottom:1px solid var(--color-border);">
-          <span class="cal-dot" style="background:${CAL_COLORS[it.type] || "#999"}; flex-shrink:0;"></span>
-          <div><strong>${CAL_LABELS[it.type] || it.type}</strong><br/><span style="font-size:13.5px; color:var(--color-text-muted);">${it.label}</span></div>
-        </div>`).join("") : `<div class="empty-state">Nothing scheduled for this day.</div>`);
+      openModal(new Date(cell.dataset.key).toDateString(), items.length ? items.map(it => {
+        let color = "#999";
+        if(it.type === 'presentClass') color = "#4CAF50";
+        else if(it.type === 'absentClass' || it.type === 'fee') color = "#F44336";
+        else if(it.type === 'lateClass' || it.type === 'birthday') color = "#FFA726";
+        else if(it.type === 'courseEnd') color = "#000080";
+          
+        return `<div style="display:flex; align-items:center; gap:10px; padding:8px 0; border-bottom:1px solid var(--color-border);">
+          <span class="cal-dot" style="background:${color}; flex-shrink:0;"></span>
+          <div><strong>${it.label}</strong></div>
+        </div>`;
+      }).join("") : `<div class="empty-state">Nothing scheduled for this day.</div>`);
     });
   });
 }

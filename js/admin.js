@@ -879,7 +879,9 @@ function openEditStudentForm(student, courses, batches) {
   updateEditBatchDropdown(); // Open hote hi pehli baar chalega
 
   document.querySelectorAll("#editStudentForm .pill").forEach(p => p.addEventListener("click", () => {
-    // ...
+    document.querySelectorAll("#editStudentForm .pill").forEach(x => x.classList.remove("active"));
+    p.classList.add("active");
+    document.getElementById("esActive").value = p.dataset.val;
   }));
 
   document.getElementById("editStudentForm").addEventListener("submit", async (e) => {
@@ -1800,8 +1802,8 @@ function showReceipt(r) {
   const accnt = r.account === "account1" ? "Sweta Parikh" : r.account === "account2" ? "Preeti Parikh" : r.account === "account3" ? "Sonali Parikh" : "";
   const d = new Date(r.paymentDate).toLocaleDateString("en-IN");
   
-  // NAYA: WhatsApp Message Text (Auto-typed)
-  const waText = `Hello ${r.studentName},%0A%0AHere is your fee payment confirmation from *Allegro School of Music*:%0A%0A🧾 *Receipt No:* ${r.receiptNo || "AUTO"}%0A💰 *Amount Paid:* ₹${r.amount}%0A📅 *Date:* ${d}%0A🎹 *Course:* ${r.courseName || "—"}%0A⏳ *Pending Balance:* ₹${r.pendingAfter}%0A%0AThank you! 🎵`;
+  // NAYA: WhatsApp Message Text (Auto-typed) - Updated Format
+  const waText = `Hello ${r.studentName},%0A%0AHere is your fee payment confirmation from *Allegro School of Music*:%0A%0A📅 *Date:* ${d}%0A🧾 *Receipt No:* ${r.receiptNo || "AUTO"}%0A🗓️ *Course Period:* ${r.coursePeriod || "—"}%0A💰 *Amount Paid:* ₹${r.amount}%0A🎹 *Course:* ${r.courseName || "—"}%0A⏳ *Pending Balance:* ₹${r.pendingAfter}%0A%0AThank you! 🎵`;
   const waLink = `https://wa.me/?text=${waText}`;
   
   const html = `
