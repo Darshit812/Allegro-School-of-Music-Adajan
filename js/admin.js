@@ -2392,32 +2392,51 @@ async function renderAccounting(filterType = "month", filterValue = null) {
       </div>
     </div>
 
-    <!-- NAYA: Perfect Grid Alignment for Desktop & Mobile -->
+    <!-- NAYA: Perfect Grid Alignment without Scroll Issue -->
     <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(320px, 1fr)); gap:20px; align-items:start;">
-      <div class="card" style="overflow:hidden;">
+      <div class="card">
         <h3 style="margin-bottom:12px; font-size:18px;">Income Breakdown</h3>
-        <div class="table-wrap" style="overflow-x:auto;">
-          <table style="width:100%; border-collapse:collapse;">
-            <tbody>
-              <tr><td>Fees Collection<br><small style="color:#777;">S: ₹${feesIncome.a1} | P: ₹${feesIncome.a2} | So: ₹${feesIncome.a3}</small></td><td style="text-align:right; white-space:nowrap; vertical-align:top;">₹${feesIncome.total}</td></tr>
-              <tr><td>Registration<br><small style="color:#777;">S: ₹${regIncome.a1} | P: ₹${regIncome.a2} | So: ₹${regIncome.a3}</small></td><td style="text-align:right; white-space:nowrap; vertical-align:top;">₹${regIncome.total}</td></tr>
-              <tr><td>Other Income<br><small style="color:#777;">S: ₹${otherIncome.a1} | P: ₹${otherIncome.a2} | So: ₹${otherIncome.a3}</small></td><td style="text-align:right; white-space:nowrap; vertical-align:top;">₹${otherIncome.total}</td></tr>
-              <tr><td><strong>Total</strong><br><small style="color:#777; font-weight:normal;">S: ₹${totalIncome.a1} | P: ₹${totalIncome.a2} | So: ₹${totalIncome.a3}</small></td><td style="text-align:right; white-space:nowrap; vertical-align:top;"><strong>₹${totalIncome.total}</strong></td></tr>
-            </tbody>
-          </table>
-        </div>
+        <table style="width:100%; min-width:auto; border-collapse:collapse; white-space:normal;">
+          <tbody>
+            <tr>
+              <td style="padding:8px 0; border-bottom:1px solid var(--color-border);">Fees Collection<br><small style="color:#777;">S: ₹${feesIncome.a1} | P: ₹${feesIncome.a2} | So: ₹${feesIncome.a3}</small></td>
+              <td style="padding:8px 0; text-align:right; vertical-align:top; font-weight:500; border-bottom:1px solid var(--color-border);">₹${feesIncome.total}</td>
+            </tr>
+            <tr>
+              <td style="padding:8px 0; border-bottom:1px solid var(--color-border);">Registration<br><small style="color:#777;">S: ₹${regIncome.a1} | P: ₹${regIncome.a2} | So: ₹${regIncome.a3}</small></td>
+              <td style="padding:8px 0; text-align:right; vertical-align:top; font-weight:500; border-bottom:1px solid var(--color-border);">₹${regIncome.total}</td>
+            </tr>
+            <tr>
+              <td style="padding:8px 0; border-bottom:1px solid var(--color-border);">Other Income<br><small style="color:#777;">S: ₹${otherIncome.a1} | P: ₹${otherIncome.a2} | So: ₹${otherIncome.a3}</small></td>
+              <td style="padding:8px 0; text-align:right; vertical-align:top; font-weight:500; border-bottom:1px solid var(--color-border);">₹${otherIncome.total}</td>
+            </tr>
+            <tr>
+              <td style="padding:12px 0 4px 0;"><strong>Total</strong><br><small style="color:#777; font-weight:normal;">S: ₹${totalIncome.a1} | P: ₹${totalIncome.a2} | So: ₹${totalIncome.a3}</small></td>
+              <td style="padding:12px 0 4px 0; text-align:right; vertical-align:top; font-size:16px;"><strong>₹${totalIncome.total}</strong></td>
+            </tr>
+          </tbody>
+        </table>
       </div>
-      <div class="card" style="overflow:hidden;">
+      
+      <div class="card">
         <h3 style="margin-bottom:12px; font-size:18px;">Expense Breakdown</h3>
-        <div class="table-wrap" style="overflow-x:auto;">
-          <table style="width:100%; border-collapse:collapse;">
-            <tbody>
-              <tr><td>Salary<br><small style="color:#777;">S: ₹${salaryExpense.a1} | P: ₹${salaryExpense.a2} | So: ₹${salaryExpense.a3}</small></td><td style="text-align:right; white-space:nowrap; vertical-align:top;">₹${salaryExpense.total}</td></tr>
-              ${Object.entries(expenseByCat).map(([k, v]) => `<tr><td>${k}<br><small style="color:#777;">S: ₹${v.a1} | P: ₹${v.a2} | So: ₹${v.a3}</small></td><td style="text-align:right; white-space:nowrap; vertical-align:top;">₹${v.total}</td></tr>`).join("") || `<tr><td colspan="2" class="hint-text">No other expenses logged</td></tr>`}
-              <tr><td><strong>Total</strong><br><small style="color:#777; font-weight:normal;">S: ₹${totalExpense.a1} | P: ₹${totalExpense.a2} | So: ₹${totalExpense.a3}</small></td><td style="text-align:right; white-space:nowrap; vertical-align:top;"><strong>₹${totalExpense.total}</strong></td></tr>
-            </tbody>
-          </table>
-        </div>
+        <table style="width:100%; min-width:auto; border-collapse:collapse; white-space:normal;">
+          <tbody>
+            <tr>
+              <td style="padding:8px 0; border-bottom:1px solid var(--color-border);">Salary<br><small style="color:#777;">S: ₹${salaryExpense.a1} | P: ₹${salaryExpense.a2} | So: ₹${salaryExpense.a3}</small></td>
+              <td style="padding:8px 0; text-align:right; vertical-align:top; font-weight:500; border-bottom:1px solid var(--color-border);">₹${salaryExpense.total}</td>
+            </tr>
+            ${Object.entries(expenseByCat).map(([k, v]) => `
+            <tr>
+              <td style="padding:8px 0; border-bottom:1px solid var(--color-border);">${k}<br><small style="color:#777;">S: ₹${v.a1} | P: ₹${v.a2} | So: ₹${v.a3}</small></td>
+              <td style="padding:8px 0; text-align:right; vertical-align:top; font-weight:500; border-bottom:1px solid var(--color-border);">₹${v.total}</td>
+            </tr>`).join("") || `<tr><td colspan="2" class="hint-text" style="padding:8px 0;">No other expenses logged</td></tr>`}
+            <tr>
+              <td style="padding:12px 0 4px 0;"><strong>Total</strong><br><small style="color:#777; font-weight:normal;">S: ₹${totalExpense.a1} | P: ₹${totalExpense.a2} | So: ₹${totalExpense.a3}</small></td>
+              <td style="padding:12px 0 4px 0; text-align:right; vertical-align:top; font-size:16px;"><strong>₹${totalExpense.total}</strong></td>
+            </tr>
+          </tbody>
+        </table>
       </div>
     </div>
 
