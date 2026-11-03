@@ -6,7 +6,7 @@
 // ============================================================
 
 import { requireRole, logout } from "./auth.js";
-import { Courses, Teachers, Batches, Students, admitStudent, Attendance, FeePlans, Payments, generateInstallmentSchedule, Homework, Salary, IncomeEntries, ExpenseEntries, Events, Notifications, ActivityLog } from "./data-service.js";
+import { Courses, Teachers, Batches, Students, admitStudent, Attendance, TeacherAttendance, FeePlans, Payments, generateInstallmentSchedule, Homework, Salary, IncomeEntries, ExpenseEntries, Events, Notifications, ActivityLog } from "./data-service.js";
 import { toKey, monthLabel, monthGridDays, weekdayShort, isBirthday, batchDayCode } from "./calendar-utils.js";
 
 const viewRoot = document.getElementById("viewRoot");
@@ -933,19 +933,46 @@ function openEditStudentForm(student, courses, batches) {
 }
 
 /* ================================================================
-   ATTENDANCE — mark a whole batch for a chosen date, one write per save.
+   ATTENDANCE — mark a whole batch for a chosen date OR mark teachers.
    ================================================================ */
 const STATUS_OPTS = [
-  { val: "present", label: "Present", color: "#4CAF50" }, // Green
-  { val: "absent", label: "Absent", color: "#F44336" },   // Red
-  { val: "late", label: "Late", color: "#FFA726" }        // Orange
+  { val: "present", label: "Present", color: "#4CAF50" }, 
+  { val: "absent", label: "Absent", color: "#F44336" },   
+  { val: "late", label: "Late", color: "#FFA726" }        
 ];
+
+let currentAttView = 'student'; // 'student' or 'teacher'
 
 async function renderAttendance() {
   viewRoot.innerHTML = `
     <div class="main-header">
-      <div><h2>Attendance</h2><div class="sub">Mark attendance for an entire batch at once.</div></div>
+      <div><h2>Attendance</h2><div class="sub">Mark attendance for students or teachers.</div></div>
     </div>
+    <div class="pill-toggle" style="margin-bottom:18px;">
+      <div class="pill ${currentAttView === 'student' ? 'active' : ''}" id="tabAttStudent">Student Attendance</div>
+      <div class="pill ${currentAttView === 'teacher' ? 'active' : ''}" id="tabAttTeacher">Teacher's Attendance</div>
+    </div>
+    <div id="attendanceContentArea"></div>`;
+
+  document.getElementById("tabAttStudent").addEventListener("click", () => {
+    currentAttView = 'student';
+    renderAttendance();
+  });
+  document.getElementById("tabAttTeacher").addEventListener("click", () => {
+    currentAttView = 'teacher';
+    renderAttendance();
+  });
+
+  if (currentAttView === 'student') {
+    renderStudentAttendanceUI();
+  } else {
+    renderTeacherAttendanceUI();
+  }
+}
+
+async function renderStudentAttendanceUI() {
+  const area = document.getElementById("attendanceContentArea");
+  area.innerHTML = `
     <div class="card" style="margin-bottom:18px;">
       <div class="field-row" style="align-items:flex-end;">
         <div class="field"><label>Batch</label><select id="attBatch"><option value="" selected disabled>Select a batch…</option></select></div>
@@ -970,18 +997,15 @@ async function renderAttendance() {
     const dateStr = document.getElementById("attDate").value;
     if (!batchId) return;
 
-    // NAYA: Jo date select hui hai, uska din (Mon, Tue) nikalein
     const [y, m, d] = dateStr.split("-").map(Number);
     const dayCode = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"][new Date(y, m - 1, d).getDay()];
 
-    // NAYA: Sirf wo active students dikhao jo is din (dayCode) aane wale hain
     let roster = students.filter(s => {
       if (s.batchId !== batchId || s.active === false) return false;
-      // Agar bacche ke specific days set hain, toh check karo ki aaj uska din hai kya
       if (s.selectedDays && s.selectedDays.length > 0) {
         return s.selectedDays.includes(dayCode);
       }
-      return true; // Agar naya feature lagne se pehle ka baccha hai, toh roz dikhega
+      return true; 
     });
 
     const existing = await Attendance.getForBatchDate(batchId, dateStr);
@@ -1005,7 +1029,7 @@ async function renderAttendance() {
           <div class="card"><div class="table-wrap"><table id="rosterTable">
             <thead><tr><th>Admission No.</th><th>Student</th><th>Status</th></tr></thead>
             <tbody>${roster.map(s => {
-              const current = existing.records?.[s.id] || ""; // Blank means unfilled
+              const current = existing.records?.[s.id] || ""; 
               return `<tr data-student="${s.id}">
                 <td>${s.admissionNo} ${s.isGuest ? '<span class="badge badge-inactive" style="margin-left:6px;">Guest</span>' : ''}</td>
                 <td>${s.name}</td>
@@ -1042,7 +1066,7 @@ async function renderAttendance() {
           p.style.borderColor = p.dataset.color;
           group.dataset.current = p.dataset.val;
         } else {
-          group.dataset.current = ""; // Un-fill ho gaya
+          group.dataset.current = ""; 
         }
       }));
 
@@ -1050,7 +1074,7 @@ async function renderAttendance() {
         const records = {};
         wrap.querySelectorAll("tr[data-student]").forEach(tr => {
           const val = tr.querySelector(".pill-toggle").dataset.current;
-          if (val) records[tr.dataset.student] = val; // Sirf filled records save honge
+          if (val) records[tr.dataset.student] = val; 
         });
         try {
           await Attendance.saveForBatchDate(batchId, dateStr, records, adminProfile.uid);
@@ -1086,7 +1110,94 @@ async function renderAttendance() {
 
   document.getElementById("attBatch").addEventListener("change", loadFor);
   document.getElementById("attDate").addEventListener("change", loadFor);
-  if(document.getElementById("attBatch").value) loadFor(); // Initial Load Fix
+  if(document.getElementById("attBatch").value) loadFor(); 
+}
+
+async function renderTeacherAttendanceUI() {
+  const area = document.getElementById("attendanceContentArea");
+  area.innerHTML = `
+    <div class="card" style="margin-bottom:18px;">
+      <div class="field-row" style="align-items:flex-end;">
+        <div class="field"><label>Date</label><input type="date" id="tAttDate" value="${fmtLocalDate(new Date())}" max="${fmtLocalDate(new Date())}" /></div>
+      </div>
+    </div>
+    <div id="tAttTableWrap"></div>
+  `;
+
+  const teachers = await Teachers.list();
+  const activeTeachers = teachers.filter(t => t.active !== false);
+
+  const loadTeacherAtt = async () => {
+    const dateStr = document.getElementById("tAttDate").value;
+    const wrap = document.getElementById("tAttTableWrap");
+    
+    if (!activeTeachers.length) {
+      wrap.innerHTML = `<div class="card empty-state"><div class="icon">🎻</div>No active teachers found.</div>`;
+      return;
+    }
+
+    const existing = await TeacherAttendance.getForDate(dateStr);
+    
+    wrap.innerHTML = `
+      <div class="card"><div class="table-wrap"><table id="tAttRosterTable">
+        <thead><tr><th>Teacher Name</th><th>Mobile</th><th>Status</th></tr></thead>
+        <tbody>${activeTeachers.map(t => {
+          const current = existing.records?.[t.id] || ""; 
+          return `<tr data-teacher="${t.id}">
+            <td><strong>${t.name}</strong></td>
+            <td>${t.mobile || "—"}</td>
+            <td><div class="pill-toggle" data-current="${current}">
+              ${STATUS_OPTS.map(o => {
+                const isActive = current === o.val;
+                const style = isActive ? `background-color:${o.color}; color:#fff; border-color:${o.color};` : "";
+                return `<div class="pill status-pill ${isActive ? "active" : ""}" data-val="${o.val}" data-color="${o.color}" style="${style}">${o.label}</div>`;
+              }).join("")}
+            </div></td>
+          </tr>`;
+        }).join("")}</tbody>
+      </table></div>
+      <div style="display:flex; justify-content:flex-end; align-items:center; margin-top:18px;">
+        <button class="btn btn-primary" id="saveTAttBtn">Save Teacher Attendance</button>
+      </div>
+      </div>
+    `;
+
+    wrap.querySelectorAll(".status-pill").forEach(p => p.addEventListener("click", () => {
+      const group = p.closest(".pill-toggle");
+      const isAlreadyActive = p.classList.contains("active");
+
+      group.querySelectorAll(".pill").forEach(x => {
+        x.classList.remove("active");
+        x.style.backgroundColor = ""; x.style.color = ""; x.style.borderColor = "";
+      });
+
+      if (!isAlreadyActive) {
+        p.classList.add("active");
+        p.style.backgroundColor = p.dataset.color;
+        p.style.color = "#fff";
+        p.style.borderColor = p.dataset.color;
+        group.dataset.current = p.dataset.val;
+      } else {
+        group.dataset.current = ""; 
+      }
+    }));
+
+    document.getElementById("saveTAttBtn")?.addEventListener("click", async () => {
+      const records = {};
+      wrap.querySelectorAll("tr[data-teacher]").forEach(tr => {
+        const val = tr.querySelector(".pill-toggle").dataset.current;
+        if (val) records[tr.dataset.teacher] = val; 
+      });
+      try {
+        await TeacherAttendance.saveForDate(dateStr, records, adminProfile.uid);
+        toast("Teacher Attendance saved");
+        logActivity("Teacher Attendance Modified", `${dateStr}`);
+      } catch (err) { toast(err.message, true); }
+    });
+  };
+
+  document.getElementById("tAttDate").addEventListener("change", loadTeacherAtt);
+  loadTeacherAtt();
 }  
 
 function openStudentForm(courses, batches) {
@@ -2131,19 +2242,23 @@ async function openSalaryHistory(teacher) {
    ================================================================ */
 function fmtLocalDate(d) { return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,"0")}-${String(d.getDate()).padStart(2,"0")}`; }
 
-function periodRange(period) {
+// NAYA HELPER: Current Financial Year nikalne ke liye (April to March)
+function getCurrentFinYear() {
   const now = new Date();
-  if (period === "today") {
-    const s = fmtLocalDate(now);
-    return { start: s, end: s, label: "Today" };
+  const year = now.getFullYear();
+  return now.getMonth() < 3 ? `${year - 1}-${year}` : `${year}-${year + 1}`;
+}
+
+// NAYA HELPER: Fin Year Options generate karne ke liye (Auto next year add karega)
+function getFinYearOptions(selectedVal) {
+  const currentY = new Date().getFullYear();
+  let opts = '';
+  // 2024 se shuru karke (current year + 1) tak banayega
+  for(let y = 2024; y <= currentY + 1; y++) {
+    const fy = `${y}-${y+1}`;
+    opts += `<option value="${fy}" ${selectedVal === fy ? 'selected' : ''}>FY ${y}-${(y+1).toString().slice(2)}</option>`;
   }
-  if (period === "year") {
-    return { start: `${now.getFullYear()}-01-01`, end: `${now.getFullYear()}-12-31`, label: `${now.getFullYear()}` };
-  }
-  // month (default)
-  const first = new Date(now.getFullYear(), now.getMonth(), 1);
-  const last = new Date(now.getFullYear(), now.getMonth() + 1, 0);
-  return { start: fmtLocalDate(first), end: fmtLocalDate(last), label: now.toLocaleString("en-IN", { month: "long", year: "numeric" }) };
+  return opts;
 }
 
 const EXPENSE_CATEGORY_LABELS = {
@@ -2151,15 +2266,39 @@ const EXPENSE_CATEGORY_LABELS = {
   instruments: "Instruments", marketing: "Marketing", misc: "Miscellaneous"
 };
 
-async function renderAccounting(period = "month") {
-  const { start, end, label } = periodRange(period);
+async function renderAccounting(filterType = "month", filterValue = null) {
+  // Default Values Set Karna
+  if (!filterValue) {
+     if (filterType === 'daily') filterValue = fmtLocalDate(new Date());
+     if (filterType === 'month') filterValue = new Date().toISOString().slice(0, 7);
+     if (filterType === 'year') filterValue = getCurrentFinYear();
+  }
+
+  // Date Range Calculate Karna
+  let start, end, label;
+  if (filterType === 'daily') {
+     start = filterValue; end = filterValue; 
+     const [y,m,d] = filterValue.split("-");
+     label = `Date: ${d}-${m}-${y}`;
+  } else if (filterType === 'month') {
+     const [y, m] = filterValue.split("-");
+     const first = new Date(y, m - 1, 1);
+     const last = new Date(y, m, 0);
+     start = fmtLocalDate(first); end = fmtLocalDate(last);
+     label = `Month: ${first.toLocaleString("en-IN", { month: "long", year: "numeric" })}`;
+  } else if (filterType === 'year') {
+     const [y1, y2] = filterValue.split("-");
+     start = `${y1}-04-01`; 
+     end = `${y2}-03-31`;   
+     label = `Financial Year ${y1}-${y2}`;
+  }
+
   const inRange = (dateStr) => dateStr && dateStr >= start && dateStr <= end;
 
   const [payments, salaryPayouts, incomeEntries, expenseEntries] = await Promise.all([
     Payments.listAll(), Salary.listAll(), IncomeEntries.list(), ExpenseEntries.list()
   ]);
 
-  // Helper to split amounts
   const getSplit = (arr) => {
     let a1 = 0, a2 = 0, a3 = 0;
     arr.forEach(x => { 
@@ -2209,6 +2348,7 @@ async function renderAccounting(period = "month") {
     else expenseByCat[key].a1 += e.amount;
   });
 
+  // NAYA: Filter UI aur Responsive Breakdown
   viewRoot.innerHTML = `
     <div class="main-header">
       <div><h2>Accounting</h2><div class="sub">Income vs expenses — ${label}</div></div>
@@ -2218,13 +2358,23 @@ async function renderAccounting(period = "month") {
       </div>
     </div>
 
-    <div class="pill-toggle" id="acctPills" style="margin-bottom:20px;">
-      <div class="pill ${period === "today" ? "active" : ""}" data-p="today">Daily</div>
-      <div class="pill ${period === "month" ? "active" : ""}" data-p="month">Monthly</div>
-      <div class="pill ${period === "year" ? "active" : ""}" data-p="year">Yearly</div>
+    <div class="card" style="margin-bottom:20px; display:flex; gap:15px; flex-wrap:wrap; align-items:flex-end;">
+      <div class="field" style="margin:0; min-width:150px;">
+          <label>Period Type</label>
+          <select id="acctPeriodType">
+              <option value="daily" ${filterType === 'daily' ? 'selected' : ''}>Daily</option>
+              <option value="month" ${filterType === 'month' ? 'selected' : ''}>Monthly</option>
+              <option value="year" ${filterType === 'year' ? 'selected' : ''}>Financial Year</option>
+          </select>
+      </div>
+      <div class="field" style="margin:0; flex:1; min-width:150px; max-width:250px;">
+          ${filterType === 'daily' ? `<label>Select Date</label><input type="date" id="acctFilterVal" value="${filterValue}" />` : ''}
+          ${filterType === 'month' ? `<label>Select Month</label><input type="month" id="acctFilterVal" value="${filterValue}" />` : ''}
+          ${filterType === 'year' ? `<label>Select Fin Year</label><select id="acctFilterVal">${getFinYearOptions(filterValue)}</select>` : ''}
+      </div>
     </div>
 
-    <div class="stat-grid" style="grid-template-columns:repeat(3,1fr); margin-bottom:26px;">
+    <div class="stat-grid" style="grid-template-columns:repeat(auto-fit, minmax(200px, 1fr)); margin-bottom:26px;">
       <div class="stat-card">
         <div class="label">Total Income</div>
         <div class="value" style="color:var(--color-teal);">₹${totalIncome.total}</div>
@@ -2242,8 +2392,9 @@ async function renderAccounting(period = "month") {
       </div>
     </div>
 
-    <div class="field-row" style="align-items:flex-start; gap:20px;">
-      <div class="card" style="flex:1;">
+    <!-- NAYA: Responsive Layout for Tables (flex-wrap and min-width added) -->
+    <div style="display:flex; flex-wrap:wrap; gap:20px; align-items:flex-start;">
+      <div class="card" style="flex: 1 1 300px; min-width:0; overflow-x:auto;">
         <h3 style="margin-bottom:12px; font-size:18px;">Income Breakdown</h3>
         <div class="table-wrap"><table>
           <tbody>
@@ -2254,7 +2405,7 @@ async function renderAccounting(period = "month") {
           </tbody>
         </table></div>
       </div>
-      <div class="card" style="flex:1;">
+      <div class="card" style="flex: 1 1 300px; min-width:0; overflow-x:auto;">
         <h3 style="margin-bottom:12px; font-size:18px;">Expense Breakdown</h3>
         <div class="table-wrap"><table>
           <tbody>
@@ -2266,9 +2417,9 @@ async function renderAccounting(period = "month") {
       </div>
     </div>
 
-    <div class="card" style="margin-top:22px;">
+    <div class="card" style="margin-top:22px; overflow-x:auto;">
       <h3 style="margin-bottom:12px; font-size:18px;">Manual Entries — ${label}</h3>
-      <div class="table-wrap"><table>
+      <div class="table-wrap" style="min-width: 600px;"><table>
         <thead><tr><th>Type</th><th>Category</th><th>Amount</th><th>Date</th><th>Account</th><th>Notes</th><th></th></tr></thead>
         <tbody>${
           (() => {
@@ -2291,7 +2442,14 @@ async function renderAccounting(period = "month") {
       </table></div>
     </div>`;
 
-  document.querySelectorAll("#acctPills .pill").forEach(p => p.addEventListener("click", () => renderAccounting(p.dataset.p)));
+  // Event Listeners for Filters
+  document.getElementById("acctPeriodType").addEventListener("change", (e) => {
+    renderAccounting(e.target.value, null); 
+  });
+  document.getElementById("acctFilterVal")?.addEventListener("change", (e) => {
+    renderAccounting(filterType, e.target.value);
+  });
+
   document.getElementById("addIncomeBtn").addEventListener("click", () => openEntryForm("income"));
   document.getElementById("addExpenseBtn").addEventListener("click", () => openEntryForm("expense"));
 
@@ -2300,7 +2458,7 @@ async function renderAccounting(period = "month") {
     if (btn.dataset.col === "incomeEntries") await IncomeEntries.remove(btn.dataset.del);
     else await ExpenseEntries.remove(btn.dataset.del);
     toast("Entry deleted");
-    renderAccounting(period);
+    renderAccounting(filterType, filterValue);
   }));
 }
 
@@ -2512,11 +2670,12 @@ const REPORT_TYPES = [
   { key: "batchStudents", label: "Batch Wise Students" },
   { key: "teacherStudents", label: "Teacher Wise Students" },
   { key: "courseStudents", label: "Course Wise Students" },
-  { key: "attendance", label: "Attendance Summary" },
+  { key: "attendance", label: "Student Attendance" },
+  { key: "teacherAttendance", label: "Teacher Attendance" }, // NAYA
   { key: "feesCollection", label: "Fees Collection" },
   { key: "dueFees", label: "Due Fees" },
   { key: "salary", label: "Salary Report" },
-  { key: "pnl", label: "Profit & Loss" }
+  { key: "pnl", label: "Profit & Loss (CA Report)" } // NAYA
 ];
 
 function exportCSV(filename, headers, rows) {
@@ -2562,7 +2721,6 @@ async function renderReports(activeKey = "students") {
 
   } else if (activeKey === "teacherStudents") {
     body.innerHTML = teachers.map(t => {
-      // NAYA: Ab purana single teacherId aur naya teacherIds (array) dono check karega
       const myBatches = batches.filter(b => b.teacherId === t.id || (b.teacherIds && b.teacherIds.includes(t.id)));
       const count = students.filter(s => myBatches.some(b => b.id === s.batchId)).length;
       return `<div class="card" style="margin-bottom:12px; display:flex; justify-content:space-between; align-items:center;">
@@ -2578,6 +2736,9 @@ async function renderReports(activeKey = "students") {
   } else if (activeKey === "attendance") {
     await renderAttendanceReport(body, batches, students);
 
+  } else if (activeKey === "teacherAttendance") { // NAYA
+    await renderTeacherAttendanceReport(body, teachers);
+
   } else if (activeKey === "feesCollection") {
     await renderFeesCollectionReport(body, students, courses, batches);
 
@@ -2588,14 +2749,14 @@ async function renderReports(activeKey = "students") {
     await renderSalaryReport(body, teachers);
 
   } else if (activeKey === "pnl") {
-    await renderPnlReport(body);
+    await renderPnlReport(body, "month", null); // NAYA arguments
   }
 }
 
 function renderTableReport(body, title, headers, rows, filename) {
   body.innerHTML = `
     <div class="toolbar"><h3 style="font-size:18px;">${title}</h3><button class="btn btn-ghost btn-sm" id="csvBtn">Export CSV</button></div>
-    <div class="card"><div class="table-wrap"><table>
+    <div class="card" style="overflow-x:auto;"><div class="table-wrap" style="min-width:600px;"><table>
       <thead><tr>${headers.map(h => `<th>${h}</th>`).join("")}</tr></thead>
       <tbody>${rows.length ? rows.map(r => `<tr>${r.map(c => `<td>${c}</td>`).join("")}</tr>`).join("") : `<tr><td colspan="${headers.length}"><div class="empty-state">No data yet.</div></td></tr>`}</tbody>
     </table></div></div>`;
@@ -2607,7 +2768,12 @@ async function renderAttendanceReport(body, batches, students) {
   body.innerHTML = `
     <div class="card" style="margin-bottom:18px;">
       <div class="field-row" style="align-items:flex-end;">
-        <div class="field"><label>Batch</label><select id="repBatch">${batches.map(b => `<option value="${b.id}">${b.name}</option>`).join("") || "<option disabled>No batches</option>"}</select></div>
+        <div class="field"><label>Batch</label>
+          <select id="repBatch">
+            <option value="all">🌟 All Batches (Combined)</option> <!-- NAYA -->
+            ${batches.map(b => `<option value="${b.id}">${b.name}</option>`).join("") || "<option disabled>No batches</option>"}
+          </select>
+        </div>
         <div class="field"><label>Month</label><input type="month" id="repMonth" value="${thisMonth}" /></div>
       </div>
     </div>
@@ -2617,8 +2783,20 @@ async function renderAttendanceReport(body, batches, students) {
     const batchId = document.getElementById("repBatch").value;
     const month = document.getElementById("repMonth").value;
     if (!batchId) return;
-    const docs = (await Attendance.listForBatch(batchId)).filter(d => d.date && d.date.startsWith(month));
-    const roster = students.filter(s => s.batchId === batchId);
+    
+    let docs = [];
+    let roster = [];
+    
+    // NAYA: All Batches Logic
+    if (batchId === "all") {
+      roster = students.filter(s => s.active !== false);
+      const promises = batches.map(b => Attendance.listForBatch(b.id));
+      const results = await Promise.all(promises);
+      docs = results.flat().filter(d => d.date && d.date.startsWith(month));
+    } else {
+      docs = (await Attendance.listForBatch(batchId)).filter(d => d.date && d.date.startsWith(month));
+      roster = students.filter(s => s.batchId === batchId);
+    }
 
     const tally = {};
     roster.forEach(s => { tally[s.id] = { present: 0, absent: 0, leave: 0, late: 0 }; });
@@ -2626,16 +2804,45 @@ async function renderAttendanceReport(body, batches, students) {
       if (tally[sid] && tally[sid][status] !== undefined) tally[sid][status]++;
     }));
 
-    const headers = ["Admission No.", "Name", "Present", "Absent", "Leave", "Late"];
-    const rows = roster.map(s => [s.admissionNo, s.name, tally[s.id].present, tally[s.id].absent, tally[s.id].leave, tally[s.id].late]);
-    renderTableReport(document.getElementById("repTableWrap"), `Attendance — ${month}`, headers, rows, `attendance-${month}.csv`);
+    const headers = ["Admission No.", "Name", "Batch", "Present", "Absent", "Late"];
+    const rows = roster.map(s => [s.admissionNo, s.name, batches.find(b=>b.id===s.batchId)?.name||"-", tally[s.id].present, tally[s.id].absent, tally[s.id].late]);
+    
+    const fileNameSuffix = batchId === "all" ? "All_Batches" : (batches.find(b=>b.id===batchId)?.name || "Batch").replace(/\s+/g, '_');
+    renderTableReport(document.getElementById("repTableWrap"), `Attendance — ${month}`, headers, rows, `attendance_${fileNameSuffix}_${month}.csv`);
   };
   
-  // NAYA: Select karte hi auto-load
   document.getElementById("repBatch").addEventListener("change", load);
   document.getElementById("repMonth").addEventListener("change", load);
-  
   if (batches.length) load();
+}
+
+// NAYA: Teacher Attendance Report
+async function renderTeacherAttendanceReport(body, teachers) {
+  const thisMonth = currentMonth();
+  body.innerHTML = `
+    <div class="card" style="margin-bottom:18px;">
+      <div class="field" style="max-width:220px;"><label>Month</label><input type="month" id="repTAttMonth" value="${thisMonth}" /></div>
+    </div>
+    <div id="repTAttWrap"></div>`;
+
+  const load = async () => {
+    const month = document.getElementById("repTAttMonth").value;
+    const allAtt = await TeacherAttendance.listAll();
+    const docs = allAtt.filter(d => d.date && d.date.startsWith(month));
+
+    const tally = {};
+    teachers.forEach(t => { tally[t.id] = { present: 0, absent: 0, late: 0 }; });
+    docs.forEach(d => Object.entries(d.records || {}).forEach(([tid, status]) => {
+      if (tally[tid] && tally[tid][status] !== undefined) tally[tid][status]++;
+    }));
+
+    const headers = ["Teacher Name", "Mobile", "Present", "Absent", "Late"];
+    const rows = teachers.filter(t => t.active !== false).map(t => [t.name, t.mobile || "-", tally[t.id].present, tally[t.id].absent, tally[t.id].late]);
+    renderTableReport(document.getElementById("repTAttWrap"), `Teacher Attendance — ${month}`, headers, rows, `teacher_attendance_${month}.csv`);
+  };
+  
+  document.getElementById("repTAttMonth").addEventListener("change", load);
+  load();
 }
 
 async function renderFeesCollectionReport(body, students, courses, batches) {
@@ -2680,60 +2887,122 @@ async function renderSalaryReport(body, teachers) {
     const rows = payouts.map(p => [teachers.find(t => t.id === p.teacherId)?.name || "—", p.salaryType === "partner" ? "Partner" : "Fixed", `₹${p.amount}`, p.paidDate, p.notes || "—"]);
     renderTableReport(document.getElementById("repSalWrap"), `Salary — ${month}`, ["Teacher", "Type", "Amount", "Paid Date", "Notes"], rows, `salary-${month}.csv`);
   };
-  
-  // NAYA: Month change karte hi auto-load
   document.getElementById("repSalMonth").addEventListener("change", load);
-  
   load();
 }
 
-async function renderPnlReport(body) {
-  const { start, end, label } = periodRange("month");
+// NAYA: Poora Naya PNL / CA Ledger Report
+async function renderPnlReport(body, filterType = "month", filterValue = null) {
+  if (!filterValue) {
+     if (filterType === 'daily') filterValue = fmtLocalDate(new Date());
+     if (filterType === 'month') filterValue = new Date().toISOString().slice(0, 7);
+     if (filterType === 'year') filterValue = getCurrentFinYear();
+  }
+
+  let start, end, label;
+  if (filterType === 'daily') {
+     start = filterValue; end = filterValue; 
+     const [y,m,d] = filterValue.split("-");
+     label = `Date: ${d}-${m}-${y}`;
+  } else if (filterType === 'month') {
+     const [y, m] = filterValue.split("-");
+     const first = new Date(y, m - 1, 1);
+     const last = new Date(y, m, 0);
+     start = fmtLocalDate(first); end = fmtLocalDate(last);
+     label = `Month: ${first.toLocaleString("en-IN", { month: "long", year: "numeric" })}`;
+  } else if (filterType === 'year') {
+     const [y1, y2] = filterValue.split("-");
+     start = `${y1}-04-01`; 
+     end = `${y2}-03-31`;   
+     label = `FY_${y1}-${y2}`;
+  }
+
   const inRange = (d) => d && d >= start && d <= end;
   
-  const [payments, salaryPayouts, incomeEntries, expenseEntries] = await Promise.all([
-    Payments.listAll(), Salary.listAll(), IncomeEntries.list(), ExpenseEntries.list()
+  const [payments, salaryPayouts, incomeEntries, expenseEntries, students, teachers] = await Promise.all([
+    Payments.listAll(), Salary.listAll(), IncomeEntries.list(), ExpenseEntries.list(), Students.list(), Teachers.list()
   ]);
 
-  const getSplit = (arr) => {
-    let a1 = 0, a2 = 0, a3 = 0;
-    arr.forEach(x => { 
-      if (x.account === "account2") a2 += x.amount; 
-      else if (x.account === "account3") a3 += x.amount; 
-      else a1 += x.amount; 
-    });
-    return { total: a1 + a2 + a3, a1, a2, a3 };
-  };
+  let totalIn = 0, totalOut = 0;
+  const detailRows = []; // [Date, Type, Category, Description, Mode, Account, Income, Expense]
 
-  const fInc = getSplit(payments.filter(p => inRange(p.paymentDate)));
-  const oInc = getSplit(incomeEntries.filter(e => inRange(e.date)));
-  const totalIncome = { total: fInc.total + oInc.total, a1: fInc.a1 + oInc.a1, a2: fInc.a2 + oInc.a2, a3: fInc.a3 + oInc.a3 };
+  payments.filter(p => inRange(p.paymentDate)).forEach(p => {
+    totalIn += p.amount;
+    const s = students.find(x => x.id === p.studentId);
+    const acc = p.account === 'account3' ? 'Sonali Parikh' : p.account === 'account2' ? 'Preeti Parikh' : 'Sweta Parikh';
+    detailRows.push([p.paymentDate, "Income", "Fee Collection", `Student: ${s?.name||'Unknown'} (Rcpt: ${p.receiptNo})`, p.mode||'cash', acc, p.amount, 0]);
+  });
 
-  const sExp = getSplit(salaryPayouts.filter(p => inRange(p.paidDate)));
-  const oExp = getSplit(expenseEntries.filter(e => inRange(e.date)));
-  const totalExpense = { total: sExp.total + oExp.total, a1: sExp.a1 + oExp.a1, a2: sExp.a2 + oExp.a2, a3: sExp.a3 + oExp.a3 };
+  incomeEntries.filter(e => inRange(e.date)).forEach(e => {
+    totalIn += e.amount;
+    const acc = e.account === 'account3' ? 'Sonali Parikh' : e.account === 'account2' ? 'Preeti Parikh' : 'Sweta Parikh';
+    const cat = e.category === 'registration' ? 'Registration Fee' : 'Other Income';
+    detailRows.push([e.date, "Income", cat, e.notes||'-', "-", acc, e.amount, 0]);
+  });
 
-  const profit = { total: totalIncome.total - totalExpense.total, a1: totalIncome.a1 - totalExpense.a1, a2: totalIncome.a2 - totalExpense.a2, a3: totalIncome.a3 - totalExpense.a3 };
+  salaryPayouts.filter(p => inRange(p.paidDate)).forEach(p => {
+    totalOut += p.amount;
+    const t = teachers.find(x => x.id === p.teacherId);
+    const acc = p.account === 'account3' ? 'Sonali Parikh' : p.account === 'account2' ? 'Preeti Parikh' : 'Sweta Parikh';
+    detailRows.push([p.paidDate, "Expense", "Salary", `Teacher: ${t?.name||'Unknown'} (${p.month}) ${p.notes||''}`, "-", acc, 0, p.amount]);
+  });
+
+  expenseEntries.filter(e => inRange(e.date)).forEach(e => {
+    totalOut += e.amount;
+    const acc = e.account === 'account3' ? 'Sonali Parikh' : e.account === 'account2' ? 'Preeti Parikh' : 'Sweta Parikh';
+    const cat = e.category === 'custom' ? (e.customLabel || 'Custom') : (EXPENSE_CATEGORY_LABELS[e.category] || e.category);
+    detailRows.push([e.date, "Expense", cat, e.notes||'-', "-", acc, 0, e.amount]);
+  });
+
+  // Sort by Date (oldest to newest)
+  detailRows.sort((a, b) => a[0].localeCompare(b[0]));
+  const profit = totalIn - totalOut;
 
   body.innerHTML = `
-    <div class="card" style="margin-bottom:18px;"><p class="hint-text">Showing ${label}. For daily/yearly breakdowns and full category detail, see the Accounting page.</p></div>
-    <div class="stat-grid" style="grid-template-columns:repeat(3,1fr);">
+    <div class="card" style="margin-bottom:20px; display:flex; gap:15px; flex-wrap:wrap; align-items:flex-end;">
+      <div class="field" style="margin:0; min-width:150px;">
+          <label>Period Type</label>
+          <select id="pnlPeriodType">
+              <option value="daily" ${filterType === 'daily' ? 'selected' : ''}>Daily</option>
+              <option value="month" ${filterType === 'month' ? 'selected' : ''}>Monthly</option>
+              <option value="year" ${filterType === 'year' ? 'selected' : ''}>Financial Year</option>
+          </select>
+      </div>
+      <div class="field" style="margin:0; flex:1; min-width:150px; max-width:250px;">
+          ${filterType === 'daily' ? `<label>Select Date</label><input type="date" id="pnlFilterVal" value="${filterValue}" />` : ''}
+          ${filterType === 'month' ? `<label>Select Month</label><input type="month" id="pnlFilterVal" value="${filterValue}" />` : ''}
+          ${filterType === 'year' ? `<label>Select Fin Year</label><select id="pnlFilterVal">${getFinYearOptions(filterValue)}</select>` : ''}
+      </div>
+    </div>
+
+    <div class="stat-grid" style="grid-template-columns:repeat(auto-fit, minmax(200px, 1fr)); margin-bottom: 20px;">
       <div class="stat-card">
         <div class="label">Total Income</div>
-        <div class="value" style="color:var(--color-teal);">₹${totalIncome.total}</div>
-        <div style="font-size:11px; color:#666; margin-top:4px;">Sweta: ₹${totalIncome.a1} | Preeti: ₹${totalIncome.a2} | Sonali: ₹${totalIncome.a3}</div>
+        <div class="value" style="color:var(--color-teal);">₹${totalIn}</div>
       </div>
       <div class="stat-card">
         <div class="label">Total Expenses</div>
-        <div class="value" style="color:var(--color-danger);">₹${totalExpense.total}</div>
-        <div style="font-size:11px; color:#666; margin-top:4px;">Sweta: ₹${totalExpense.a1} | Preeti: ₹${totalExpense.a2} | Sonali: ₹${totalExpense.a3}</div>
+        <div class="value" style="color:var(--color-danger);">₹${totalOut}</div>
       </div>
       <div class="stat-card">
-        <div class="label">${profit.total >= 0 ? "Profit" : "Loss"}</div>
-        <div class="value" style="color:${profit.total >= 0 ? "var(--color-teal)" : "var(--color-danger)"};">₹${Math.abs(profit.total)}</div>
-        <div style="font-size:11px; color:#666; margin-top:4px;">Sweta: ₹${profit.a1} | Preeti: ₹${profit.a2} | Sonali: ₹${profit.a3}</div>
+        <div class="label">${profit >= 0 ? "Net Profit" : "Net Loss"}</div>
+        <div class="value" style="color:${profit >= 0 ? "var(--color-teal)" : "var(--color-danger)"};">₹${Math.abs(profit)}</div>
       </div>
-    </div>`;
+    </div>
+    
+    <div id="pnlTableWrap"></div>
+  `;
+
+  document.getElementById("pnlPeriodType").addEventListener("change", (e) => {
+    renderPnlReport(body, e.target.value, null); 
+  });
+  document.getElementById("pnlFilterVal")?.addEventListener("change", (e) => {
+    renderPnlReport(body, filterType, e.target.value);
+  });
+
+  // Render the detailed table with CSV Export
+  const headers = ["Date", "Type", "Category", "Description", "Payment Mode", "Account", "Income (₹)", "Expense (₹)"];
+  renderTableReport(document.getElementById("pnlTableWrap"), `CA Ledger (P&L) — ${label}`, headers, detailRows, `CA_Ledger_Report_${label.replace(/\s+/g, '_')}.csv`);
 }
 
 /* ================================================================

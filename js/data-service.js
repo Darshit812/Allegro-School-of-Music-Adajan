@@ -540,3 +540,28 @@ export const Salary = {
     return snap.docs.map(d => ({ id: d.id, ...d.data() }));
   }
 };
+
+/* ---------------- Teacher Attendance ---------------- */
+// teacherAttendance/{dateStr} = { date, records: { teacherId: 'present'|'absent'|'late' }, markedBy, updatedAt }
+
+export const TeacherAttendance = {
+  async getForDate(dateStr) {
+    const ref = doc(db, "teacherAttendance", dateStr);
+    const snap = await _getDoc(ref);
+    return snap.exists() ? snap.data() : { date: dateStr, records: {} };
+  },
+
+  async saveForDate(dateStr, records, markedByUid) {
+    const ref = doc(db, "teacherAttendance", dateStr);
+    await setDoc(ref, {
+      date: dateStr, records, markedBy: markedByUid,
+      updatedAt: serverTimestamp()
+    }, { merge: true });
+  },
+
+  // NAYA: Report generate karne ke liye listAll function
+  async listAll() {
+    const snap = await getDocs(collection(db, "teacherAttendance"));
+    return snap.docs.map(d => ({ id: d.id, ...d.data() }));
+  }
+};
