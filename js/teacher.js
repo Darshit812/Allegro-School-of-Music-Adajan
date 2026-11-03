@@ -160,11 +160,19 @@ async function renderMyBatches() {
   }
 
   const today = `${new Date().getFullYear()}-${String(new Date().getMonth()+1).padStart(2,"0")}-${String(new Date().getDate()).padStart(2,"0")}`;
+  
+  // NAYA: 'All Students' checkbox add kiya gaya hai
   body.innerHTML = `
     <div class="card">
       <div class="field-row" style="align-items:flex-end;">
         <div class="field"><label>Batch</label>
-          <select id="tBatch">${myBatches.map(b => `<option value="${b.id}">${b.name}</option>`).join("")}</select></div>
+          <select id="tBatch">${myBatches.map(b => `<option value="${b.id}">${b.name}</option>`).join("")}</select>
+        </div>
+        <div class="field" style="max-width: 150px;">
+          <label style="display:flex; align-items:center; gap:6px; cursor:pointer; height: 38px; margin: 0; padding-bottom: 5px;">
+            <input type="checkbox" id="tAllStudents" style="width:auto; margin:0;" /> All Students
+          </label>
+        </div>
         <div class="field"><label>Date</label><input type="date" id="tDate" value="${today}" max="${today}" /></div>
       </div>
     </div>
@@ -175,26 +183,48 @@ async function renderMyBatches() {
   const loadFor = async () => {
     const batchId = document.getElementById("tBatch").value;
     const dateStr = document.getElementById("tDate").value;
-    if(!batchId) return;
+    const isAll = document.getElementById("tAllStudents").checked; // Checkbox status
+    
+    if(!batchId && !isAll) return;
 
-    // NAYA: Date se din (Mon, Tue) nikalna
+    // Agar All Students checked hai to Batch dropdown disable kar do
+    document.getElementById("tBatch").disabled = isAll;
+
     const [y, m, d] = dateStr.split("-").map(Number);
     const dayCode = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"][new Date(y, m - 1, d).getDay()];
 
-    // NAYA: Roster mein specific students filter karna
+    // NAYA: Roster mein specific students filter karna (Batch wise ya All)
     let roster = students.filter(s => {
-      if (s.batchId !== batchId || s.active === false) return false;
+      if (s.active === false) return false;
+      
+      if (isAll) {
+         if (!myBatches.some(b => b.id === s.batchId)) return false; // Teacher ke kisi bhi batch ka hona chahiye
+      } else {
+         if (s.batchId !== batchId) return false;
+      }
+
       if (s.selectedDays && s.selectedDays.length > 0) {
         return s.selectedDays.includes(dayCode);
       }
       return true;
     });
 
-    const existing = await Attendance.getForBatchDate(batchId, dateStr);
+    // NAYA: Existing records nikalna (Agar All hai to sab batches ke merge karke laayega)
+    let existingRecords = {};
+    if (isAll) {
+      for (let b of myBatches) {
+        const ex = await Attendance.getForBatchDate(b.id, dateStr);
+        Object.assign(existingRecords, ex.records || {});
+      }
+    } else {
+      const ex = await Attendance.getForBatchDate(batchId, dateStr);
+      existingRecords = ex.records || {};
+    }
+
     const wrap = document.getElementById("tAttWrap");
 
     const rosterIds = new Set(roster.map(s => s.id));
-    Object.keys(existing.records || {}).forEach(guestId => {
+    Object.keys(existingRecords).forEach(guestId => {
       if (!rosterIds.has(guestId)) {
         const guestStudent = students.find(s => s.id === guestId);
         if (guestStudent) roster.push({ ...guestStudent, isGuest: true });
@@ -204,17 +234,19 @@ async function renderMyBatches() {
     const paintRoster = () => {
       if (!roster.length) {
         wrap.innerHTML = `
-          <div class="card empty-state"><div class="icon">🎼</div>No students in this batch yet.</div>
+          <div class="card empty-state"><div class="icon">🎼</div>No students scheduled for this day.</div>
           <button class="btn btn-ghost" id="addGuestBtn" style="margin-top:16px;">+ Add Guest Student</button>`;
       } else {
         wrap.innerHTML = `
           <div class="card"><div class="table-wrap"><table>
-            <thead><tr><th>Admission No.</th><th>Student</th><th>Status</th><th>Action</th></tr></thead>
+            <thead><tr><th>Admission No.</th><th>Student</th>${isAll ? '<th>Batch</th>' : ''}<th>Status</th><th>Action</th></tr></thead>
             <tbody>${roster.map(s => {
-              const current = existing.records?.[s.id] || "";
-              return `<tr data-student="${s.id}">
+              const current = existingRecords[s.id] || "";
+              const sBatch = myBatches.find(b => b.id === s.batchId)?.name || "—";
+              return `<tr data-student="${s.id}" data-batch="${s.batchId}">
                 <td>${s.admissionNo}${s.isGuest ? '<span class="badge badge-inactive" style="margin-left:6px;">Guest</span>' : ''}</td>
                 <td>${s.name}</td>
+                ${isAll ? `<td><span style="font-size:12px; color:#666;">${sBatch}</span></td>` : ''}
                 <td><div class="pill-toggle" data-current="${current}">
                   ${STATUS_OPTS.map(o => {
                     const isActive = current === o.val;
@@ -222,13 +254,11 @@ async function renderMyBatches() {
                     return `<div class="pill status-pill ${isActive ? "active" : ""}" data-val="${o.val}" data-color="${o.color}" style="${style}">${o.label}</div>`;
                   }).join("")}
                 </div></td>
-                <!-- NAYA: Har row mein Individual Homework ka chhota button -->
-                <td><button class="btn btn-ghost btn-sm quick-hw-btn" data-sid="${s.id}" data-sname="${s.name}" style="padding:4px 8px; color:var(--color-primary);" title="Give Individual Homework">📝 HW</button></td>
+                <td><button class="btn btn-ghost btn-sm quick-hw-btn" data-sid="${s.id}" data-sname="${s.name}" data-batch="${s.batchId}" style="padding:4px 8px; color:var(--color-primary);" title="Give Individual Homework">📝 HW</button></td>
               </tr>`;
             }).join("")}</tbody>
           </table></div>
           <div style="display:flex; justify-content:space-between; align-items:center; margin-top:18px;">
-            <!-- NAYA: Add Guest ke paas hi Batch HW ka naya button -->
             <div style="display:flex; gap:10px; flex-wrap:wrap;">
               <button class="btn btn-ghost" id="addGuestBtn">+ Add Guest</button>
               <button class="btn btn-ghost" id="batchHwBtn" style="color:var(--color-primary);">+ Assign Batch HW</button>
@@ -247,42 +277,65 @@ async function renderMyBatches() {
         } else { group.dataset.current = ""; }
       }));
 
+      // NAYA: Save Logic (Multi-batch support)
       document.getElementById("tSaveBtn")?.addEventListener("click", async () => {
-        const records = {};
+        const recordsByBatch = {};
+        if (isAll) {
+            myBatches.forEach(b => recordsByBatch[b.id] = {});
+        } else {
+            recordsByBatch[batchId] = {};
+        }
+
         wrap.querySelectorAll("tr[data-student]").forEach(tr => {
           const val = tr.querySelector(".pill-toggle").dataset.current;
-          if(val) records[tr.dataset.student] = val;
+          const sId = tr.dataset.student;
+          const sBatch = tr.dataset.batch;
+          if (val) {
+              if (!recordsByBatch[sBatch]) recordsByBatch[sBatch] = {};
+              recordsByBatch[sBatch][sId] = val;
+          }
         });
+        
         try {
-          await Attendance.saveForBatchDate(batchId, dateStr, records, teacherProfile.uid);
+          const promises = Object.keys(recordsByBatch).map(bId => 
+             Attendance.saveForBatchDate(bId, dateStr, recordsByBatch[bId], teacherProfile.uid)
+          );
+          await Promise.all(promises);
           toast("Attendance saved");
-          ActivityLog.record("Attendance Modified", `Batch on ${dateStr}`, teacherProfile);
+          ActivityLog.record("Attendance Modified", isAll ? `All Batches on ${dateStr}` : `Batch on ${dateStr}`, teacherProfile);
         } catch (err) { toast(err.message, true); }
       });
 
-      // 🟢 NAYA: Individual HW Button Listener
       wrap.querySelectorAll(".quick-hw-btn").forEach(btn => {
-        btn.addEventListener("click", () => openQuickHwModal("individual", batchId, btn.dataset.sid, btn.dataset.sname, dateStr));
+        btn.addEventListener("click", () => openQuickHwModal("individual", btn.dataset.batch, btn.dataset.sid, btn.dataset.sname, dateStr));
       });
 
-      // 🟢 NAYA: Batch HW Button Listener
       document.getElementById("batchHwBtn")?.addEventListener("click", () => {
+        if (isAll) {
+            toast("Please uncheck 'All Students' to assign Batch HW.", true);
+            return;
+        }
         const bName = myBatches.find(b => b.id === batchId)?.name;
         openQuickHwModal("batch", batchId, null, bName, dateStr);
       });
 
-      // 🟢 NAYA: Guest Student Add karna (Course Filtered aur A-Z Sorted)
       document.getElementById("addGuestBtn")?.addEventListener("click", () => {
-        const currentBatch = myBatches.find(b => b.id === batchId);
-        // Filter by courseId aur pehle se added nahi hone chahiye
-        let validGuests = students.filter(s => s.active !== false && s.courseId === currentBatch.courseId && !roster.some(r => r.id === s.id));
-        // Sort A to Z
+        let validGuests = students.filter(s => {
+           if (s.active === false || roster.some(r => r.id === s.id)) return false;
+           if (isAll) {
+               const myCourseIds = myBatches.map(b => b.courseId);
+               return myCourseIds.includes(s.courseId);
+           } else {
+               const currentBatch = myBatches.find(b => b.id === batchId);
+               return s.courseId === currentBatch?.courseId;
+           }
+        });
         validGuests.sort((a, b) => (a.name || "").localeCompare(b.name || ""));
 
         document.getElementById("modalTitle").textContent = "Add Guest Student";
         document.getElementById("modalBody").innerHTML = `
           <div class="field">
-            <label>Select Student (Filtered by Same Course)</label>
+            <label>Select Student (Filtered by Course)</label>
             <select id="guestSelect" style="margin-bottom:12px;">
               ${validGuests.length ? validGuests.map(s => `<option value="${s.id}">${s.name} (${s.admissionNo})</option>`).join("") : `<option value="" disabled>No eligible students found in this course</option>`}
             </select>
@@ -307,7 +360,9 @@ async function renderMyBatches() {
 
   document.getElementById("tBatch").addEventListener("change", loadFor);
   document.getElementById("tDate").addEventListener("change", loadFor);
-  if(document.getElementById("tBatch").value) loadFor(); // Initial Load fix
+  document.getElementById("tAllStudents").addEventListener("change", loadFor); // NAYA Listener
+  
+  if(document.getElementById("tBatch").value) loadFor(); 
 }
 
 

@@ -150,13 +150,15 @@ export async function admitStudent(studentData, parentLoginId, parentPassword) {
     loginId: parentLoginId, password: parentPassword, role: "parent",
     profileData: {
       name: studentData.fatherName || studentData.motherName || "Parent",
-      mobile: studentData.mobile, studentId: newStudentRef.id
+      mobile: studentData.mobile, 
+      studentId: newStudentRef.id
     }
   });
 
   // Agar account successfully ban gaya, tabhi Student data Firestore mein save karo
   await setDoc(newStudentRef, {
     ...studentData,
+    // Database me ab fatherMobile aur motherMobile fields direct aayenge
     parentLoginId: parentLoginId.trim().toUpperCase(),
     parentPassword: parentPassword,
     admissionNo,

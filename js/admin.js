@@ -808,7 +808,20 @@ function openEditStudentForm(student, courses, batches) {
     <form id="editStudentForm">
       <div class="field-row">
         <div class="field"><label>Student Name</label><input type="text" id="esName" value="${student.name}" required /></div>
-        <div class="field"><label>Mobile</label><input type="tel" id="esMobile" value="${student.mobile || ""}" required /></div>
+        <div class="field"><label>Date of Birth</label><input type="date" id="esDob" value="${student.dob || ""}" /></div>
+      </div>
+      <div class="field"><label>Address</label><input type="text" id="esAddress" value="${student.address || ""}" /></div>
+      <div class="field-row">
+        <div class="field"><label>Mobile (WhatsApp)</label><input type="tel" id="esMobile" value="${student.mobile || ""}" required /></div>
+        <div class="field"><label>Email (optional)</label><input type="email" id="esEmail" value="${student.email || ""}" /></div>
+      </div>
+      <div class="field-row">
+        <div class="field"><label>Father's Name</label><input type="text" id="esFather" value="${student.fatherName || ""}" /></div>
+        <div class="field"><label>Father's Mobile</label><input type="tel" id="esFatherMobile" value="${student.fatherMobile || ""}" /></div>
+      </div>
+      <div class="field-row">
+        <div class="field"><label>Mother's Name</label><input type="text" id="esMother" value="${student.motherName || ""}" /></div>
+        <div class="field"><label>Mother's Mobile</label><input type="tel" id="esMotherMobile" value="${student.motherMobile || ""}" /></div>
       </div>
       <div class="field-row">
         <div class="field"><label>Course</label>
@@ -896,7 +909,14 @@ function openEditStudentForm(student, courses, batches) {
 
     const data = {
       name: document.getElementById("esName").value.trim(),
+      dob: document.getElementById("esDob").value,
+      address: document.getElementById("esAddress").value.trim(),
       mobile: document.getElementById("esMobile").value.trim(),
+      email: document.getElementById("esEmail").value.trim(),
+      fatherName: document.getElementById("esFather").value.trim(),
+      fatherMobile: document.getElementById("esFatherMobile").value.trim(),
+      motherName: document.getElementById("esMother").value.trim(),
+      motherMobile: document.getElementById("esMotherMobile").value.trim(),
       courseId: document.getElementById("esCourse").value,
       batchId: document.getElementById("esBatch").value,
       selectedDays: selectedDays, // NAYA
@@ -1078,12 +1098,16 @@ function openStudentForm(courses, batches) {
       </div>
       <div class="field"><label>Address</label><input type="text" id="sAddress" /></div>
       <div class="field-row">
-        <div class="field"><label>Father's Name</label><input type="text" id="sFather" /></div>
-        <div class="field"><label>Mother's Name</label><input type="text" id="sMother" /></div>
+        <div class="field"><label>Mobile (WhatsApp - Primary)</label><input type="tel" id="sMobile" required /></div>
+        <div class="field"><label>Email (optional)</label><input type="email" id="sEmail" /></div>
       </div>
       <div class="field-row">
-        <div class="field"><label>Mobile (WhatsApp)</label><input type="tel" id="sMobile" required /></div>
-        <div class="field"><label>Email (optional)</label><input type="email" id="sEmail" /></div>
+        <div class="field"><label>Father's Name</label><input type="text" id="sFather" /></div>
+        <div class="field"><label>Father's Mobile (optional)</label><input type="tel" id="sFatherMobile" /></div>
+      </div>
+      <div class="field-row">
+        <div class="field"><label>Mother's Name</label><input type="text" id="sMother" /></div>
+        <div class="field"><label>Mother's Mobile (optional)</label><input type="tel" id="sMotherMobile" /></div>
       </div>
       <div class="field-row">
         <div class="field"><label>Course</label>
@@ -1158,10 +1182,12 @@ function openStudentForm(courses, batches) {
       name: document.getElementById("sName").value.trim(),
       dob: document.getElementById("sDob").value,
       address: document.getElementById("sAddress").value.trim(),
-      fatherName: document.getElementById("sFather").value.trim(),
-      motherName: document.getElementById("sMother").value.trim(),
       mobile: document.getElementById("sMobile").value.trim(),
       email: document.getElementById("sEmail").value.trim(),
+      fatherName: document.getElementById("sFather").value.trim(),
+      fatherMobile: document.getElementById("sFatherMobile").value.trim(), // NAYA
+      motherName: document.getElementById("sMother").value.trim(),
+      motherMobile: document.getElementById("sMotherMobile").value.trim(), // NAYA
       courseId: document.getElementById("sCourse").value,
       batchId: document.getElementById("sBatch").value,
       selectedDays: selectedDays, // NAYA: Data save ho raha hai
