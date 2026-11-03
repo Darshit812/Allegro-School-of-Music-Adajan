@@ -2392,34 +2392,39 @@ async function renderAccounting(filterType = "month", filterValue = null) {
       </div>
     </div>
 
-    <!-- NAYA: Responsive Layout for Tables (flex-wrap and min-width added) -->
-    <div style="display:flex; flex-wrap:wrap; gap:20px; align-items:flex-start;">
-      <div class="card" style="flex: 1 1 300px; min-width:0; overflow-x:auto;">
+    <!-- NAYA: Perfect Grid Alignment for Desktop & Mobile -->
+    <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(320px, 1fr)); gap:20px; align-items:start;">
+      <div class="card" style="overflow:hidden;">
         <h3 style="margin-bottom:12px; font-size:18px;">Income Breakdown</h3>
-        <div class="table-wrap"><table>
-          <tbody>
-            <tr><td>Fees Collection<br><small style="color:#777;">S: ₹${feesIncome.a1} | P: ₹${feesIncome.a2} | So: ₹${feesIncome.a3}</small></td><td style="text-align:right;">₹${feesIncome.total}</td></tr>
-            <tr><td>Registration<br><small style="color:#777;">S: ₹${regIncome.a1} | P: ₹${regIncome.a2} | So: ₹${regIncome.a3}</small></td><td style="text-align:right;">₹${regIncome.total}</td></tr>
-            <tr><td>Other Income<br><small style="color:#777;">S: ₹${otherIncome.a1} | P: ₹${otherIncome.a2} | So: ₹${otherIncome.a3}</small></td><td style="text-align:right;">₹${otherIncome.total}</td></tr>
-            <tr><td><strong>Total</strong><br><small style="color:#777; font-weight:normal;">S: ₹${totalIncome.a1} | P: ₹${totalIncome.a2} | So: ₹${totalIncome.a3}</small></td><td style="text-align:right;"><strong>₹${totalIncome.total}</strong></td></tr>
-          </tbody>
-        </table></div>
+        <div class="table-wrap" style="overflow-x:auto;">
+          <table style="width:100%; border-collapse:collapse;">
+            <tbody>
+              <tr><td>Fees Collection<br><small style="color:#777;">S: ₹${feesIncome.a1} | P: ₹${feesIncome.a2} | So: ₹${feesIncome.a3}</small></td><td style="text-align:right; white-space:nowrap; vertical-align:top;">₹${feesIncome.total}</td></tr>
+              <tr><td>Registration<br><small style="color:#777;">S: ₹${regIncome.a1} | P: ₹${regIncome.a2} | So: ₹${regIncome.a3}</small></td><td style="text-align:right; white-space:nowrap; vertical-align:top;">₹${regIncome.total}</td></tr>
+              <tr><td>Other Income<br><small style="color:#777;">S: ₹${otherIncome.a1} | P: ₹${otherIncome.a2} | So: ₹${otherIncome.a3}</small></td><td style="text-align:right; white-space:nowrap; vertical-align:top;">₹${otherIncome.total}</td></tr>
+              <tr><td><strong>Total</strong><br><small style="color:#777; font-weight:normal;">S: ₹${totalIncome.a1} | P: ₹${totalIncome.a2} | So: ₹${totalIncome.a3}</small></td><td style="text-align:right; white-space:nowrap; vertical-align:top;"><strong>₹${totalIncome.total}</strong></td></tr>
+            </tbody>
+          </table>
+        </div>
       </div>
-      <div class="card" style="flex: 1 1 300px; min-width:0; overflow-x:auto;">
+      <div class="card" style="overflow:hidden;">
         <h3 style="margin-bottom:12px; font-size:18px;">Expense Breakdown</h3>
-        <div class="table-wrap"><table>
-          <tbody>
-            <tr><td>Salary<br><small style="color:#777;">S: ₹${salaryExpense.a1} | P: ₹${salaryExpense.a2} | So: ₹${salaryExpense.a3}</small></td><td style="text-align:right;">₹${salaryExpense.total}</td></tr>
-            ${Object.entries(expenseByCat).map(([k, v]) => `<tr><td>${k}<br><small style="color:#777;">S: ₹${v.a1} | P: ₹${v.a2} | So: ₹${v.a3}</small></td><td style="text-align:right;">₹${v.total}</td></tr>`).join("") || `<tr><td colspan="2" class="hint-text">No other expenses logged</td></tr>`}
-            <tr><td><strong>Total</strong><br><small style="color:#777; font-weight:normal;">S: ₹${totalExpense.a1} | P: ₹${totalExpense.a2} | So: ₹${totalExpense.a3}</small></td><td style="text-align:right;"><strong>₹${totalExpense.total}</strong></td></tr>
-          </tbody>
-        </table></div>
+        <div class="table-wrap" style="overflow-x:auto;">
+          <table style="width:100%; border-collapse:collapse;">
+            <tbody>
+              <tr><td>Salary<br><small style="color:#777;">S: ₹${salaryExpense.a1} | P: ₹${salaryExpense.a2} | So: ₹${salaryExpense.a3}</small></td><td style="text-align:right; white-space:nowrap; vertical-align:top;">₹${salaryExpense.total}</td></tr>
+              ${Object.entries(expenseByCat).map(([k, v]) => `<tr><td>${k}<br><small style="color:#777;">S: ₹${v.a1} | P: ₹${v.a2} | So: ₹${v.a3}</small></td><td style="text-align:right; white-space:nowrap; vertical-align:top;">₹${v.total}</td></tr>`).join("") || `<tr><td colspan="2" class="hint-text">No other expenses logged</td></tr>`}
+              <tr><td><strong>Total</strong><br><small style="color:#777; font-weight:normal;">S: ₹${totalExpense.a1} | P: ₹${totalExpense.a2} | So: ₹${totalExpense.a3}</small></td><td style="text-align:right; white-space:nowrap; vertical-align:top;"><strong>₹${totalExpense.total}</strong></td></tr>
+            </tbody>
+          </table>
+        </div>
       </div>
     </div>
 
-    <div class="card" style="margin-top:22px; overflow-x:auto;">
+    <div class="card" style="margin-top:22px; overflow:hidden;">
       <h3 style="margin-bottom:12px; font-size:18px;">Manual Entries — ${label}</h3>
-      <div class="table-wrap" style="min-width: 600px;"><table>
+      <div class="table-wrap" style="overflow-x:auto;">
+        <table style="width:100%; white-space:nowrap;">
         <thead><tr><th>Type</th><th>Category</th><th>Amount</th><th>Date</th><th>Account</th><th>Notes</th><th></th></tr></thead>
         <tbody>${
           (() => {
