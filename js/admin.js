@@ -2403,19 +2403,19 @@ async function renderAccounting(filterType = "month", filterValue = null) {
         <table style="width:100%; min-width:auto; border-collapse:collapse; white-space:normal;">
           <tbody>
             <tr>
-              <td style="padding:8px 0; border-bottom:1px solid var(--color-border);">Fees Collection<br><small style="color:#777;">S: ₹${feesIncome.a1} | P: ₹${feesIncome.a2} | So: ₹${feesIncome.a3}</small></td>
+              <td style="padding:8px 0; border-bottom:1px solid var(--color-border);">Fees Collection<br><small style="color:#777;">UC: ₹${feesIncome.a1} | IH: ₹${feesIncome.a2} | SBI: ₹${feesIncome.a3}</small></td>
               <td style="padding:8px 0; text-align:right; vertical-align:top; font-weight:500; border-bottom:1px solid var(--color-border);">₹${feesIncome.total}</td>
             </tr>
             <tr>
-              <td style="padding:8px 0; border-bottom:1px solid var(--color-border);">Registration<br><small style="color:#777;">S: ₹${regIncome.a1} | P: ₹${regIncome.a2} | So: ₹${regIncome.a3}</small></td>
+              <td style="padding:8px 0; border-bottom:1px solid var(--color-border);">Registration<br><small style="color:#777;">UC: ₹${regIncome.a1} | IH: ₹${regIncome.a2} | SBI: ₹${regIncome.a3}</small></td>
               <td style="padding:8px 0; text-align:right; vertical-align:top; font-weight:500; border-bottom:1px solid var(--color-border);">₹${regIncome.total}</td>
             </tr>
             <tr>
-              <td style="padding:8px 0; border-bottom:1px solid var(--color-border);">Other Income<br><small style="color:#777;">S: ₹${otherIncome.a1} | P: ₹${otherIncome.a2} | So: ₹${otherIncome.a3}</small></td>
+              <td style="padding:8px 0; border-bottom:1px solid var(--color-border);">Other Income<br><small style="color:#777;">UC: ₹${otherIncome.a1} | IH: ₹${otherIncome.a2} | SBI: ₹${otherIncome.a3}</small></td>
               <td style="padding:8px 0; text-align:right; vertical-align:top; font-weight:500; border-bottom:1px solid var(--color-border);">₹${otherIncome.total}</td>
             </tr>
             <tr>
-              <td style="padding:12px 0 4px 0;"><strong>Total</strong><br><small style="color:#777; font-weight:normal;">S: ₹${totalIncome.a1} | P: ₹${totalIncome.a2} | So: ₹${totalIncome.a3}</small></td>
+              <td style="padding:12px 0 4px 0;"><strong>Total</strong><br><small style="color:#777; font-weight:normal;">UC: ₹${totalIncome.a1} | IH: ₹${totalIncome.a2} | SBI: ₹${totalIncome.a3}</small></td>
               <td style="padding:12px 0 4px 0; text-align:right; vertical-align:top; font-size:16px;"><strong>₹${totalIncome.total}</strong></td>
             </tr>
           </tbody>
@@ -2427,16 +2427,16 @@ async function renderAccounting(filterType = "month", filterValue = null) {
         <table style="width:100%; min-width:auto; border-collapse:collapse; white-space:normal;">
           <tbody>
             <tr>
-              <td style="padding:8px 0; border-bottom:1px solid var(--color-border);">Salary<br><small style="color:#777;">S: ₹${salaryExpense.a1} | P: ₹${salaryExpense.a2} | So: ₹${salaryExpense.a3}</small></td>
+              <td style="padding:8px 0; border-bottom:1px solid var(--color-border);">Salary<br><small style="color:#777;">UC: ₹${salaryExpense.a1} | IH: ₹${salaryExpense.a2} | SBI: ₹${salaryExpense.a3}</small></td>
               <td style="padding:8px 0; text-align:right; vertical-align:top; font-weight:500; border-bottom:1px solid var(--color-border);">₹${salaryExpense.total}</td>
             </tr>
             ${Object.entries(expenseByCat).map(([k, v]) => `
             <tr>
-              <td style="padding:8px 0; border-bottom:1px solid var(--color-border);">${k}<br><small style="color:#777;">S: ₹${v.a1} | P: ₹${v.a2} | So: ₹${v.a3}</small></td>
+              <td style="padding:8px 0; border-bottom:1px solid var(--color-border);">${k}<br><small style="color:#777;">UC: ₹${v.a1} | IH: ₹${v.a2} | SBI: ₹${v.a3}</small></td>
               <td style="padding:8px 0; text-align:right; vertical-align:top; font-weight:500; border-bottom:1px solid var(--color-border);">₹${v.total}</td>
             </tr>`).join("") || `<tr><td colspan="2" class="hint-text" style="padding:8px 0;">No other expenses logged</td></tr>`}
             <tr>
-              <td style="padding:12px 0 4px 0;"><strong>Total</strong><br><small style="color:#777; font-weight:normal;">S: ₹${totalExpense.a1} | P: ₹${totalExpense.a2} | So: ₹${totalExpense.a3}</small></td>
+              <td style="padding:12px 0 4px 0;"><strong>Total</strong><br><small style="color:#777; font-weight:normal;">UC: ₹${totalExpense.a1} | IH: ₹${totalExpense.a2} | SBI: ₹${totalExpense.a3}</small></td>
               <td style="padding:12px 0 4px 0; text-align:right; vertical-align:top; font-size:16px;"><strong>₹${totalExpense.total}</strong></td>
             </tr>
           </tbody>
