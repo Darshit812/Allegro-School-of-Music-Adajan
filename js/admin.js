@@ -806,8 +806,9 @@ async function renderStudents() {
 function openEditStudentForm(student, courses, batches) {
   openModal(`Edit Student — ${student.name}`, `
     <form id="editStudentForm">
+      <div class="field"><label>Student Name</label><input type="text" id="esName" value="${student.name}" required /></div>
       <div class="field-row">
-        <div class="field"><label>Student Name</label><input type="text" id="esName" value="${student.name}" required /></div>
+        <div class="field"><label>Admission Date</label><input type="date" id="esAdmissionDate" value="${student.admissionDate || ""}" required /></div>
         <div class="field"><label>Date of Birth</label><input type="date" id="esDob" value="${student.dob || ""}" /></div>
       </div>
       <div class="field"><label>Address</label><input type="text" id="esAddress" value="${student.address || ""}" /></div>
@@ -909,6 +910,7 @@ function openEditStudentForm(student, courses, batches) {
 
     const data = {
       name: document.getElementById("esName").value.trim(),
+      admissionDate: document.getElementById("esAdmissionDate").value, // NAYA
       dob: document.getElementById("esDob").value,
       address: document.getElementById("esAddress").value.trim(),
       mobile: document.getElementById("esMobile").value.trim(),
@@ -1203,8 +1205,9 @@ async function renderTeacherAttendanceUI() {
 function openStudentForm(courses, batches) {
   openModal("New Admission", `
     <form id="studentForm">
+      <div class="field"><label>Student Name</label><input type="text" id="sName" required /></div>
       <div class="field-row">
-        <div class="field"><label>Student Name</label><input type="text" id="sName" required /></div>
+        <div class="field"><label>Admission Date</label><input type="date" id="sAdmissionDate" value="${new Date().toISOString().split('T')[0]}" required /></div>
         <div class="field"><label>Date of Birth</label><input type="date" id="sDob" /></div>
       </div>
       <div class="field"><label>Address</label><input type="text" id="sAddress" /></div>
@@ -1291,6 +1294,7 @@ function openStudentForm(courses, batches) {
 
     const data = {
       name: document.getElementById("sName").value.trim(),
+      admissionDate: document.getElementById("sAdmissionDate").value, // NAYA
       dob: document.getElementById("sDob").value,
       address: document.getElementById("sAddress").value.trim(),
       mobile: document.getElementById("sMobile").value.trim(),
@@ -1726,9 +1730,9 @@ function openManagePlan(plan, student, course, batches) {
         </div>
         <div class="field"><label>Received Account</label>
           <select id="epAccount">
-            <option value="account1" ${instToEdit.account === 'account1' ? 'selected' : ''}>Sweta Parikh</option>
-            <option value="account2" ${instToEdit.account === 'account2' ? 'selected' : ''}>Preeti Parikh</option>
-            <option value="account3" ${instToEdit.account === 'account3' ? 'selected' : ''}>Sonali Parikh</option>
+            <option value="account1" ${instToEdit.account === 'account1' ? 'selected' : ''}>Union Current</option>
+            <option value="account2" ${instToEdit.account === 'account2' ? 'selected' : ''}>ICICI HUF</option>
+            <option value="account3" ${instToEdit.account === 'account3' ? 'selected' : ''}>SBI</option>
           </select>
         </div>
         <div style="display:flex; gap:10px; margin-top:20px;">
@@ -1890,9 +1894,9 @@ function openCollectForm(plan, installmentNumber, student, course, batchName) {
           <select id="payMode"><option value="cash">Cash</option><option value="bank">Bank</option><option value="upi">UPI</option></select></div>
         <div class="field"><label>Received Account</label>
           <select id="payAccount">
-            <option value="account1">Sweta Parikh</option>
-            <option value="account2">Preeti Parikh</option>
-            <option value="account3">Sonali Parikh</option>
+            <option value="account1">Union Current</option>
+            <option value="account2">ICICI HUF</option>
+            <option value="account3">SBI</option>
           </select></div>
       </div>
       <div style="display:flex; gap:10px; margin-top:20px;">
@@ -1936,7 +1940,7 @@ function showReceipt(r) {
   
   // Clean default values
   const mode = r.mode ? r.mode.toUpperCase() : "CASH";
-  const accnt = r.account === "account1" ? "Sweta Parikh" : r.account === "account2" ? "Preeti Parikh" : r.account === "account3" ? "Sonali Parikh" : "";
+  const accnt = r.account === "account1" ? "Union Current" : r.account === "account2" ? "ICICI HUF" : r.account === "account3" ? "SBI" : "";
   const d = new Date(r.paymentDate).toLocaleDateString("en-IN");
   
   // NAYA: WhatsApp Message Text (Auto-typed) - Updated Format
@@ -2115,9 +2119,9 @@ async function renderSalary(selectedMonth = currentMonth()) {
   const payoutByTeacher = Object.fromEntries(payouts.map(p => [p.teacherId, p]));
   
   const totalPaid = payouts.reduce((sum, p) => sum + p.amount, 0);
-  const tSweta = payouts.filter(p => p.account !== "account2" && p.account !== "account3").reduce((sum, p) => sum + p.amount, 0);
-  const tPreeti = payouts.filter(p => p.account === "account2").reduce((sum, p) => sum + p.amount, 0);
-  const tSonali = payouts.filter(p => p.account === "account3").reduce((sum, p) => sum + p.amount, 0); // NAYA
+  const tUnion Current = payouts.filter(p => p.account !== "account2" && p.account !== "account3").reduce((sum, p) => sum + p.amount, 0);
+  const tICICI HUF = payouts.filter(p => p.account === "account2").reduce((sum, p) => sum + p.amount, 0);
+  const tSBI = payouts.filter(p => p.account === "account3").reduce((sum, p) => sum + p.amount, 0); // NAYA
 
   viewRoot.innerHTML = `
     <div class="main-header">
@@ -2132,7 +2136,7 @@ async function renderSalary(selectedMonth = currentMonth()) {
     <div class="stat-grid" style="grid-template-columns:repeat(3,1fr); margin-bottom:22px;">
       <div class="stat-card"><div class="label">Teachers</div><div class="value">${teachers.filter(t => t.active).length}</div></div>
       <div class="stat-card"><div class="label">Paid This Month</div><div class="value">${payouts.length}</div></div>
-      <div class="stat-card"><div class="label">Total Paid (₹)</div><div class="value">₹${totalPaid}</div><div style="font-size:11px; color:#666; margin-top:4px;">Sweta: ₹${tSweta} | Preeti: ₹${tPreeti} | Sonali: ₹${tSonali}</div></div>
+      <div class="stat-card"><div class="label">Total Paid (₹)</div><div class="value">₹${totalPaid}</div><div style="font-size:11px; color:#666; margin-top:4px;">Union Current: ₹${tUnion Current} | ICICI HUF: ₹${tICICI HUF} | SBI: ₹${tSBI}</div></div>
     </div>
     <div class="card"><div class="table-wrap"><table id="salTable">
       <thead><tr><th>Teacher</th><th>Type</th><th>Amount</th><th>Status</th><th></th></tr></thead>
@@ -2181,9 +2185,9 @@ function openPaySalaryForm(teacher, month, existingPayout) {
           <input type="number" id="salAmount" min="0" value="${existingPayout?.amount ?? ""}" required /></div>
         <div class="field"><label>Paid From Account</label>
           <select id="salAccount">
-            <option value="account1" ${existingPayout?.account === 'account1' ? 'selected' : ''}>Sweta Parikh</option>
-            <option value="account2" ${existingPayout?.account === 'account2' ? 'selected' : ''}>Preeti Parikh</option>
-            <option value="account3" ${existingPayout?.account === 'account3' ? 'selected' : ''}>Sonali Parikh</option>
+            <option value="account1" ${existingPayout?.account === 'account1' ? 'selected' : ''}>Union Current</option>
+            <option value="account2" ${existingPayout?.account === 'account2' ? 'selected' : ''}>ICICI HUF</option>
+            <option value="account3" ${existingPayout?.account === 'account3' ? 'selected' : ''}>SBI</option>
           </select></div>
       </div>
       <div class="field">
@@ -2378,17 +2382,17 @@ async function renderAccounting(filterType = "month", filterValue = null) {
       <div class="stat-card">
         <div class="label">Total Income</div>
         <div class="value" style="color:var(--color-teal);">₹${totalIncome.total}</div>
-        <div style="font-size:11px; color:#666; margin-top:4px;">Sweta: ₹${totalIncome.a1} | Preeti: ₹${totalIncome.a2} | Sonali: ₹${totalIncome.a3}</div>
+        <div style="font-size:11px; color:#666; margin-top:4px;">Union Current: ₹${totalIncome.a1} | ICICI HUF: ₹${totalIncome.a2} | SBI: ₹${totalIncome.a3}</div>
       </div>
       <div class="stat-card">
         <div class="label">Total Expenses</div>
         <div class="value" style="color:var(--color-danger);">₹${totalExpense.total}</div>
-        <div style="font-size:11px; color:#666; margin-top:4px;">Sweta: ₹${totalExpense.a1} | Preeti: ₹${totalExpense.a2} | Sonali: ₹${totalExpense.a3}</div>
+        <div style="font-size:11px; color:#666; margin-top:4px;">Union Current: ₹${totalExpense.a1} | ICICI HUF: ₹${totalExpense.a2} | SBI: ₹${totalExpense.a3}</div>
       </div>
       <div class="stat-card">
         <div class="label">${profit.total >= 0 ? "Profit" : "Loss"}</div>
         <div class="value" style="color:${profit.total >= 0 ? "var(--color-teal)" : "var(--color-danger)"};">₹${Math.abs(profit.total)}</div>
-        <div style="font-size:11px; color:#666; margin-top:4px;">Sweta: ₹${profit.a1} | Preeti: ₹${profit.a2} | Sonali: ₹${profit.a3}</div>
+        <div style="font-size:11px; color:#666; margin-top:4px;">Union Current: ₹${profit.a1} | ICICI HUF: ₹${profit.a2} | SBI: ₹${profit.a3}</div>
       </div>
     </div>
 
@@ -2457,7 +2461,7 @@ async function renderAccounting(filterType = "month", filterValue = null) {
                 <td><span class="badge ${r.kind === "income" ? "badge-active" : "badge-inactive"}">${r.kind === "income" ? "Income" : "Expense"}</span></td>
                 <td>${r.category === "custom" ? (r.customLabel || "Custom") : (EXPENSE_CATEGORY_LABELS[r.category] || r.category)}</td>
                 <td>₹${r.amount}</td><td>${r.date}</td>
-                <td><span class="badge" style="background:#eef2ff; color:#4f46e5; border:1px solid #c7d2fe;">${r.account === 'account3' ? 'Sonali Parikh' : r.account === 'account2' ? 'Preeti Parikh' : 'Sweta Parikh'}</span></td>
+                <td><span class="badge" style="background:#eef2ff; color:#4f46e5; border:1px solid #c7d2fe;">${r.account === 'account3' ? 'SBI' : r.account === 'account2' ? 'ICICI HUF' : 'Union Current'}</span></td>
                 <td>${r.notes || "—"}</td>
                 <td><button class="btn btn-danger btn-sm" data-del="${r.id}" data-col="${r.col}">Delete</button></td>
               </tr>`).join("");
@@ -2507,9 +2511,9 @@ function openEntryForm(kind) {
       <div class="field-row">
         <div class="field"><label>Account</label>
           <select id="entAccount">
-            <option value="account1">Sweta Parikh</option>
-            <option value="account2">Preeti Parikh</option>
-            <option value="account3">Sonali Parikh</option>
+            <option value="account1">Union Current</option>
+            <option value="account2">ICICI HUF</option>
+            <option value="account3">SBI</option>
           </select></div>
         <div class="field"><label>Notes (optional)</label><input type="text" id="entNotes" /></div>
       </div>
@@ -2875,7 +2879,7 @@ async function renderFeesCollectionReport(body, students, courses, batches) {
     .sort((a, b) => (b.paymentDate || "").localeCompare(a.paymentDate || ""))
     .map(p => {
       const s = students.find(st => st.id === p.studentId);
-      return [p.receiptNo, s?.name || "—", `₹${p.amount}`, p.paymentDate, p.mode || "—", p.account === "account1" ? "Sweta Parikh" : p.account === "account2" ? "Preeti Parikh" : p.account === "account3" ? "Sonali Parikh" : "—"];
+      return [p.receiptNo, s?.name || "—", `₹${p.amount}`, p.paymentDate, p.mode || "—", p.account === "account1" ? "Union Current" : p.account === "account2" ? "ICICI HUF" : p.account === "account3" ? "SBI" : "—"];
     });
   renderTableReport(body, "Fees Collection", ["Receipt No.", "Student", "Amount", "Date", "Mode", "Account"], rows, "fees-collection.csv");
 }
@@ -2953,13 +2957,13 @@ async function renderPnlReport(body, filterType = "month", filterValue = null) {
   payments.filter(p => inRange(p.paymentDate)).forEach(p => {
     totalIn += p.amount;
     const s = students.find(x => x.id === p.studentId);
-    const acc = p.account === 'account3' ? 'Sonali Parikh' : p.account === 'account2' ? 'Preeti Parikh' : 'Sweta Parikh';
+    const acc = p.account === 'account3' ? 'SBI' : p.account === 'account2' ? 'ICICI HUF' : 'Union Current';
     detailRows.push([p.paymentDate, "Income", "Fee Collection", `Student: ${s?.name||'Unknown'} (Rcpt: ${p.receiptNo})`, p.mode||'cash', acc, p.amount, 0]);
   });
 
   incomeEntries.filter(e => inRange(e.date)).forEach(e => {
     totalIn += e.amount;
-    const acc = e.account === 'account3' ? 'Sonali Parikh' : e.account === 'account2' ? 'Preeti Parikh' : 'Sweta Parikh';
+    const acc = e.account === 'account3' ? 'SBI' : e.account === 'account2' ? 'ICICI HUF' : 'Union Current';
     const cat = e.category === 'registration' ? 'Registration Fee' : 'Other Income';
     detailRows.push([e.date, "Income", cat, e.notes||'-', "-", acc, e.amount, 0]);
   });
@@ -2967,13 +2971,13 @@ async function renderPnlReport(body, filterType = "month", filterValue = null) {
   salaryPayouts.filter(p => inRange(p.paidDate)).forEach(p => {
     totalOut += p.amount;
     const t = teachers.find(x => x.id === p.teacherId);
-    const acc = p.account === 'account3' ? 'Sonali Parikh' : p.account === 'account2' ? 'Preeti Parikh' : 'Sweta Parikh';
+    const acc = p.account === 'account3' ? 'SBI' : p.account === 'account2' ? 'ICICI HUF' : 'Union Current';
     detailRows.push([p.paidDate, "Expense", "Salary", `Teacher: ${t?.name||'Unknown'} (${p.month}) ${p.notes||''}`, "-", acc, 0, p.amount]);
   });
 
   expenseEntries.filter(e => inRange(e.date)).forEach(e => {
     totalOut += e.amount;
-    const acc = e.account === 'account3' ? 'Sonali Parikh' : e.account === 'account2' ? 'Preeti Parikh' : 'Sweta Parikh';
+    const acc = e.account === 'account3' ? 'SBI' : e.account === 'account2' ? 'ICICI HUF' : 'Union Current';
     const cat = e.category === 'custom' ? (e.customLabel || 'Custom') : (EXPENSE_CATEGORY_LABELS[e.category] || e.category);
     detailRows.push([e.date, "Expense", cat, e.notes||'-', "-", acc, 0, e.amount]);
   });
