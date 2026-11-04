@@ -2119,8 +2119,8 @@ async function renderSalary(selectedMonth = currentMonth()) {
   const payoutByTeacher = Object.fromEntries(payouts.map(p => [p.teacherId, p]));
   
   const totalPaid = payouts.reduce((sum, p) => sum + p.amount, 0);
-  const tUnion Current = payouts.filter(p => p.account !== "account2" && p.account !== "account3").reduce((sum, p) => sum + p.amount, 0);
-  const tICICI HUF = payouts.filter(p => p.account === "account2").reduce((sum, p) => sum + p.amount, 0);
+  const tUnion_Current = payouts.filter(p => p.account !== "account2" && p.account !== "account3").reduce((sum, p) => sum + p.amount, 0);
+  const tICICI_HUF = payouts.filter(p => p.account === "account2").reduce((sum, p) => sum + p.amount, 0);
   const tSBI = payouts.filter(p => p.account === "account3").reduce((sum, p) => sum + p.amount, 0); // NAYA
 
   viewRoot.innerHTML = `
@@ -2136,7 +2136,7 @@ async function renderSalary(selectedMonth = currentMonth()) {
     <div class="stat-grid" style="grid-template-columns:repeat(3,1fr); margin-bottom:22px;">
       <div class="stat-card"><div class="label">Teachers</div><div class="value">${teachers.filter(t => t.active).length}</div></div>
       <div class="stat-card"><div class="label">Paid This Month</div><div class="value">${payouts.length}</div></div>
-      <div class="stat-card"><div class="label">Total Paid (₹)</div><div class="value">₹${totalPaid}</div><div style="font-size:11px; color:#666; margin-top:4px;">Union Current: ₹${tUnion Current} | ICICI HUF: ₹${tICICI HUF} | SBI: ₹${tSBI}</div></div>
+      <div class="stat-card"><div class="label">Total Paid (₹)</div><div class="value">₹${totalPaid}</div><div style="font-size:11px; color:#666; margin-top:4px;">Union_Current: ₹${tUnion_Current} | ICICI_HUF: ₹${tICICI_HUF} | SBI: ₹${tSBI}</div></div>
     </div>
     <div class="card"><div class="table-wrap"><table id="salTable">
       <thead><tr><th>Teacher</th><th>Type</th><th>Amount</th><th>Status</th><th></th></tr></thead>
@@ -2382,17 +2382,17 @@ async function renderAccounting(filterType = "month", filterValue = null) {
       <div class="stat-card">
         <div class="label">Total Income</div>
         <div class="value" style="color:var(--color-teal);">₹${totalIncome.total}</div>
-        <div style="font-size:11px; color:#666; margin-top:4px;">Union Current: ₹${totalIncome.a1} | ICICI HUF: ₹${totalIncome.a2} | SBI: ₹${totalIncome.a3}</div>
+        <div style="font-size:11px; color:#666; margin-top:4px;">Union_Current: ₹${totalIncome.a1} | ICICI_HUF: ₹${totalIncome.a2} | SBI: ₹${totalIncome.a3}</div>
       </div>
       <div class="stat-card">
         <div class="label">Total Expenses</div>
         <div class="value" style="color:var(--color-danger);">₹${totalExpense.total}</div>
-        <div style="font-size:11px; color:#666; margin-top:4px;">Union Current: ₹${totalExpense.a1} | ICICI HUF: ₹${totalExpense.a2} | SBI: ₹${totalExpense.a3}</div>
+        <div style="font-size:11px; color:#666; margin-top:4px;">Union_Current: ₹${totalExpense.a1} | ICICI_HUF: ₹${totalExpense.a2} | SBI: ₹${totalExpense.a3}</div>
       </div>
       <div class="stat-card">
         <div class="label">${profit.total >= 0 ? "Profit" : "Loss"}</div>
         <div class="value" style="color:${profit.total >= 0 ? "var(--color-teal)" : "var(--color-danger)"};">₹${Math.abs(profit.total)}</div>
-        <div style="font-size:11px; color:#666; margin-top:4px;">Union Current: ₹${profit.a1} | ICICI HUF: ₹${profit.a2} | SBI: ₹${profit.a3}</div>
+        <div style="font-size:11px; color:#666; margin-top:4px;">Union_Current: ₹${profit.a1} | ICICI_HUF: ₹${profit.a2} | SBI: ₹${profit.a3}</div>
       </div>
     </div>
 
